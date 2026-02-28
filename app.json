@@ -24,7 +24,7 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "name": "LifeRPG",
       "themeColor": "#0a0a0f",
       "backgroundColor": "#0a0a0f"

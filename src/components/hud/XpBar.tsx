@@ -1,26 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-import { useProfileStore, useXpProgress, useLevel } from '../../store/profileStore';
+import { useXpProgress, useLevel } from '../../store/profileStore';
 
 export function XpBar() {
   const { progress, total } = useXpProgress();
   const level = useLevel();
   const ratio = Math.min(1, Math.max(0, progress / total));
-
-  const width = useSharedValue(ratio);
-
-  useEffect(() => {
-    width.value = withSpring(ratio, { stiffness: 80, damping: 14 });
-  }, [ratio]);
-
-  const animStyle = useAnimatedStyle(() => ({
-    width: `${width.value * 100}%`,
-  }));
 
   return (
     <View style={styles.container}>
@@ -31,7 +16,7 @@ export function XpBar() {
         </Text>
       </View>
       <View style={styles.track}>
-        <Animated.View style={[styles.fill, animStyle]} />
+        <View style={[styles.fill, { width: `${ratio * 100}%` as any }]} />
       </View>
     </View>
   );

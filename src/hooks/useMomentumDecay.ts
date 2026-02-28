@@ -4,20 +4,18 @@ import { useProfileStore } from '../store/profileStore';
 import { todayString } from '../utils/date';
 
 export function useMomentumDecay() {
-  const applyDecay = useProfileStore((s) => s.applyMomentumDecay);
-
   useEffect(() => {
-    // Apply on cold start
-    applyDecay(todayString());
+    // Apply on cold start — use getState() to avoid depending on a store reference
+    useProfileStore.getState().applyMomentumDecay(todayString());
 
     // Apply when app comes to foreground
     const handler = (state: AppStateStatus) => {
       if (state === 'active') {
-        applyDecay(todayString());
+        useProfileStore.getState().applyMomentumDecay(todayString());
       }
     };
 
     const subscription = AppState.addEventListener('change', handler);
     return () => subscription.remove();
-  }, [applyDecay]);
+  }, []); // empty deps — intentional, getState() always reads latest value
 }

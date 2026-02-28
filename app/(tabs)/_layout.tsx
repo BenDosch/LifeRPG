@@ -1,8 +1,7 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { HudBar } from '../../src/components/hud/HudBar';
 
 function TabIcon({
@@ -23,63 +22,58 @@ function TabIcon({
 
 export default function TabsLayout() {
   return (
-    <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={styles.hudSafe}>
-        <HudBar />
-      </SafeAreaView>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: styles.tabBar,
-          tabBarActiveTintColor: '#a855f7',
-          tabBarInactiveTintColor: '#475569',
-          tabBarLabelStyle: styles.tabLabel,
+    <Tabs
+      screenOptions={{
+        headerShown: true,
+        header: () => <HudBar />,
+        tabBarStyle: styles.tabBar,
+        tabBarActiveTintColor: '#a855f7',
+        tabBarInactiveTintColor: '#475569',
+        tabBarLabelStyle: styles.tabLabel,
+        contentStyle: { backgroundColor: '#0a0a0f' },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Projects',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="folder" focused={focused} />
+          ),
         }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Projects',
-            tabBarIcon: ({ focused }) => (
-              <TabIcon name="folder" focused={focused} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="skills"
-          options={{
-            title: 'Skills',
-            tabBarIcon: ({ focused }) => (
-              <TabIcon name="flash" focused={focused} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="log"
-          options={{
-            title: 'Log',
-            tabBarIcon: ({ focused }) => (
-              <TabIcon name="list" focused={focused} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: 'Profile',
-            tabBarIcon: ({ focused }) => (
-              <TabIcon name="person" focused={focused} />
-            ),
-          }}
-        />
-      </Tabs>
-    </View>
+      />
+      <Tabs.Screen
+        name="skills"
+        options={{
+          title: 'Skills',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="flash" focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="log"
+        options={{
+          title: 'Log',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="list" focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon name="person" focused={focused} />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0a0a0f' },
-  hudSafe: { backgroundColor: '#12121a' },
   tabBar: {
     backgroundColor: '#12121a',
     borderTopColor: '#1e1e2e',

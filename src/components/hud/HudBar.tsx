@@ -1,27 +1,32 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfileStore } from '../../store/profileStore';
 import { XpBar } from './XpBar';
 import { MomentumBar } from './MomentumBar';
 
 export function HudBar() {
-  const { name, title } = useProfileStore((s) => ({ name: s.name, title: s.title }));
+  const name = useProfileStore((s) => s.name);
+  const title = useProfileStore((s) => s.title);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.identity}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.title}>{title}</Text>
+    <SafeAreaView edges={['top']} style={styles.safe}>
+      <View style={styles.container}>
+        <View style={styles.identity}>
+          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.title}>{title}</Text>
+        </View>
+        <View style={styles.bars}>
+          <XpBar />
+          <MomentumBar />
+        </View>
       </View>
-      <View style={styles.bars}>
-        <XpBar />
-        <MomentumBar />
-      </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safe: { backgroundColor: '#12121a' },
   container: {
     backgroundColor: '#12121a',
     borderBottomWidth: 1,

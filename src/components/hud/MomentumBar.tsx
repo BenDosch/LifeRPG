@@ -1,43 +1,23 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
 import { useProfileStore } from '../../store/profileStore';
 
 export function MomentumBar() {
   const momentum = useProfileStore((s) => s.momentum);
   const ratio = Math.min(1, Math.max(0, momentum / 100));
 
-  const width = useSharedValue(ratio);
-
-  useEffect(() => {
-    width.value = withSpring(ratio, { stiffness: 80, damping: 14 });
-  }, [ratio]);
-
-  const animStyle = useAnimatedStyle(() => ({
-    width: `${width.value * 100}%`,
-  }));
-
-  const getMomentumColor = () => {
-    if (momentum >= 80) return '#06b6d4';
-    if (momentum >= 40) return '#0ea5e9';
-    return '#1e3a4a';
-  };
+  const color =
+    momentum >= 80 ? '#06b6d4' : momentum >= 40 ? '#0ea5e9' : '#1e3a4a';
 
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
         <Text style={styles.label}>MOMENTUM</Text>
-        <Text style={[styles.value, { color: getMomentumColor() }]}>
-          {Math.round(momentum)}%
-        </Text>
+        <Text style={[styles.value, { color }]}>{Math.round(momentum)}%</Text>
       </View>
       <View style={styles.track}>
-        <Animated.View
-          style={[styles.fill, { backgroundColor: getMomentumColor() }, animStyle]}
+        <View
+          style={[styles.fill, { width: `${ratio * 100}%` as any, backgroundColor: color }]}
         />
       </View>
     </View>

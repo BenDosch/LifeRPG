@@ -5,7 +5,6 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import 'react-native-reanimated';
 import { useMomentumDecay } from '../src/hooks/useMomentumDecay';
 import '../global.css';
 

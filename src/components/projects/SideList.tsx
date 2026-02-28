@@ -1,12 +1,13 @@
 import React from 'react';
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
+import { useShallow } from 'zustand/react/shallow';
 import { useProjectStore } from '../../store/projectStore';
 import { useUIStore } from '../../store/uiStore';
 import { SideItem } from './SideItem';
 
 export function SideList() {
-  const rootProjects = useProjectStore((s) =>
-    s.projects.filter((p) => p.parentId === null && !p.completedAt)
+  const rootProjects = useProjectStore(
+    useShallow((s) => s.projects.filter((p) => p.parentId === null && !p.completedAt))
   );
   const { selectedParentId, setSelectedParentId } = useUIStore();
 

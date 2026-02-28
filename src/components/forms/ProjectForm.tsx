@@ -11,6 +11,7 @@ import {
 import { Difficulty, Importance, Project, DIFFICULTY_LABELS, IMPORTANCE_LABELS } from '../../types';
 import { SelectPicker } from '../shared/SelectPicker';
 import { SkillInput } from './SkillInput';
+import { useShallow } from 'zustand/react/shallow';
 import { useProjectStore } from '../../store/projectStore';
 
 const DIFFICULTY_OPTIONS: { label: string; value: Difficulty }[] = [
@@ -46,8 +47,8 @@ export function ProjectForm({
   const [hasParent, setHasParent] = useState(false);
   const [parentId, setParentId] = useState<string | null>(null);
 
-  const rootProjects = useProjectStore((s) =>
-    s.projects.filter((p) => p.parentId === null && !p.completedAt)
+  const rootProjects = useProjectStore(
+    useShallow((s) => s.projects.filter((p) => p.parentId === null && !p.completedAt))
   );
   const addProject = useProjectStore((s) => s.addProject);
   const updateProject = useProjectStore((s) => s.updateProject);

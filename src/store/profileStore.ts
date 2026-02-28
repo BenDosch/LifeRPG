@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile } from '../types';
@@ -56,10 +57,12 @@ export function useLevel() {
 }
 
 export function useXpProgress() {
-  return useProfileStore((s) => ({
-    progress: s.points - (s.threshold - 100),
-    total: 100,
-    points: s.points,
-    threshold: s.threshold,
-  }));
+  return useProfileStore(
+    useShallow((s) => ({
+      progress: s.points - (s.threshold - 100),
+      total: 100,
+      points: s.points,
+      threshold: s.threshold,
+    }))
+  );
 }
