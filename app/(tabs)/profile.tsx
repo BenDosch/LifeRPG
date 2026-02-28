@@ -9,12 +9,22 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useShallow } from 'zustand/react/shallow';
 import { useProfileStore, useLevel, useXpProgress } from '../../src/store/profileStore';
 import { useProjectStore } from '../../src/store/projectStore';
 import { ConfirmDialog } from '../../src/components/shared/ConfirmDialog';
 
 export default function ProfileScreen() {
-  const { name, title, points, momentum, setName, setTitle } = useProfileStore();
+  const { name, title, points, momentum, setName, setTitle } = useProfileStore(
+    useShallow((s) => ({
+      name: s.name,
+      title: s.title,
+      points: s.points,
+      momentum: s.momentum,
+      setName: s.setName,
+      setTitle: s.setTitle,
+    }))
+  );
   const level = useLevel();
   const { progress } = useXpProgress();
   const log = useProjectStore((s) => s.log);

@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ProjectList } from '../../src/components/projects/ProjectList';
 import { SideList } from '../../src/components/projects/SideList';
+import { useShallow } from 'zustand/react/shallow';
 import { useUIStore } from '../../src/store/uiStore';
 import { Project } from '../../src/types';
 
@@ -18,7 +19,9 @@ export default function ProjectsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isWide = width >= SIDEBAR_BREAKPOINT;
-  const { sidebarVisible, toggleSidebar } = useUIStore();
+  const { sidebarVisible, toggleSidebar } = useUIStore(
+    useShallow((s) => ({ sidebarVisible: s.sidebarVisible, toggleSidebar: s.toggleSidebar }))
+  );
 
   const showSidebar = isWide || sidebarVisible;
 

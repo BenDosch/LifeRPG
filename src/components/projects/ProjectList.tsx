@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useProjectStore } from '../../store/projectStore';
+import { useShallow } from 'zustand/react/shallow';
 import { useUIStore } from '../../store/uiStore';
 import { Project } from '../../types';
 import { ProjectItem } from './ProjectItem';
@@ -29,7 +30,13 @@ export function ProjectList({ onAddProject, onEditProject }: ProjectListProps) {
     difficultyFilter,
     showCompleted,
     selectedParentId,
-  } = useUIStore();
+  } = useUIStore(useShallow((s) => ({
+    searchQuery: s.searchQuery,
+    importanceFilter: s.importanceFilter,
+    difficultyFilter: s.difficultyFilter,
+    showCompleted: s.showCompleted,
+    selectedParentId: s.selectedParentId,
+  })));
 
   const filtered = useMemo(() => {
     let list = projects.filter((p) => p.parentId === selectedParentId);

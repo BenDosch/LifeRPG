@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useShallow } from 'zustand/react/shallow';
 import { useUIStore } from '../../store/uiStore';
 import { Difficulty, Importance } from '../../types';
 
@@ -35,7 +36,17 @@ export function FilterBar() {
     setImportanceFilter,
     setShowCompleted,
     clearFilters,
-  } = useUIStore();
+  } = useUIStore(useShallow((s) => ({
+    searchQuery: s.searchQuery,
+    difficultyFilter: s.difficultyFilter,
+    importanceFilter: s.importanceFilter,
+    showCompleted: s.showCompleted,
+    setSearchQuery: s.setSearchQuery,
+    setDifficultyFilter: s.setDifficultyFilter,
+    setImportanceFilter: s.setImportanceFilter,
+    setShowCompleted: s.setShowCompleted,
+    clearFilters: s.clearFilters,
+  })));
 
   const hasFilters = searchQuery || difficultyFilter || importanceFilter;
 
