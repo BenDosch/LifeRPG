@@ -1,18 +1,35 @@
-import React, { useMemo } from 'react';
-import { View, Text, FlatList, StyleSheet, Platform } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, FlatList, StyleSheet, Platform, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useProjectStore } from '../../store/projectStore';
-import { DIFFICULTY_COLORS } from '../../types';
+import { useQuestStore } from '../../store/questStore';
+import { useShallow } from 'zustand/react/shallow';
+import { IconPickerModal, DEFAULT_SKILL_COLOR } from './IconPickerModal';
 
 interface SkillStat {
   name: string;
   count: number;
   xp: number;
-  recentDifficulty: string;
+  level: number;
+  progress: number;
 }
 
+const XP_PER_LEVEL = 100;
+
 export function SkillList() {
-  const log = useProjectStore((s) => s.log);
+  const log = useQuestStore((s) => s.log);
+  const { skillIcons, skillColors, standaloneSkills, setSkillIcon, setSkillColor, addStandaloneSkill } = useQuestStore(
+    useShallow((s) => ({
+      skillIcons: s.skillIcons,
+      skillColors: s.skillColors,
+      standaloneSkills: s.standaloneSkills,
+      setSkillIcon: s.setSkillIcon,
+      setSkillColor: s.setSkillColor,
+      addStandaloneSkill: s.addStandaloneSkill,
+    }))
+  );
+  const [pickerSkill, setPickerSkill] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [newSkillName, setNewSkillName] = useState('');
 
   const stats = useMemo(() => {
     const map = new Map<string, SkillStat>();
@@ -23,53 +40,176 @@ export function SkillList() {
           existing.count += 1;
           existing.xp += entry.xpAwarded;
         } else {
-          map.set(skill, {
-            name: skill,
-            count: 1,
-            xp: entry.xpAwarded,
-            recentDifficulty: entry.difficulty,
-          });
+          map.set(skill, { name: skill, count: 1, xp: entry.xpAwarded, level: 0, progress: 0 });
         }
       }
     }
-    return Array.from(map.values()).sort((a, b) => b.xp - a.xp);
-  }, [log]);
+    // Include standalone skills not yet in the log
+    for (const skill of standaloneSkills) {
+      if (!map.has(skill)) {
+        map.set(skill, { name: skill, count: 0, xp: 0, level: 0, progress: 0 });
+      }
+    }
+    const result = Array.from(map.values());
+    for (const stat of result) {
+      stat.level = Math.floor(stat.xp / XP_PER_LEVEL);
+      stat.progress = stat.xp % XP_PER_LEVEL;
+    }
+    return result.sort((a, b) => b.xp - a.xp);
+  }, [log, standaloneSkills]);
+
+  const handleConfirmAdd = () => {
+    const trimmed = newSkillName.trim();
+    if (trimmed) addStandaloneSkill(trimmed);
+    setNewSkillName('');
+    setAdding(false);
+  };
+
+  const addInputRow = adding && (
+    <View style={styles.addRow}>
+      <TextInput
+        style={styles.addInput}
+        value={newSkillName}
+        onChangeText={setNewSkillName}
+        placeholder="Skill name..."
+        placeholderTextColor="#475569"
+        autoFocus
+        returnKeyType="done"
+        onSubmitEditing={handleConfirmAdd}
+      />
+      <TouchableOpacity
+        style={[styles.addConfirmBtn, !newSkillName.trim() && styles.addConfirmBtnDisabled]}
+        onPress={handleConfirmAdd}
+        disabled={!newSkillName.trim()}
+      >
+        <Ionicons name="checkmark" size={18} color={newSkillName.trim() ? '#a855f7' : '#334155'} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.addCancelBtn}
+        onPress={() => { setNewSkillName(''); setAdding(false); }}
+      >
+        <Ionicons name="close" size={18} color="#475569" />
+      </TouchableOpacity>
+    </View>
+  );
 
   if (stats.length === 0) {
     return (
-      <View style={styles.empty}>
-        <Ionicons name="flash-outline" size={48} color="#1e1e2e" />
-        <Text style={styles.emptyText}>No skills yet</Text>
-        <Text style={styles.emptySubtext}>
-          Complete projects with skills to see them here
-        </Text>
+      <View style={styles.emptyWrapper}>
+        <View style={styles.listHeader}>
+          <TouchableOpacity style={styles.addFab} onPress={() => setAdding((v) => !v)}>
+            <Ionicons name={adding ? 'close' : 'add'} size={18} color="#a855f7" />
+            <Text style={styles.addFabText}>{adding ? 'Cancel' : 'New Skill'}</Text>
+          </TouchableOpacity>
+        </View>
+        {addInputRow}
+        {!adding && (
+          <View style={styles.empty}>
+            <Ionicons name="flash-outline" size={48} color="#1e1e2e" />
+            <Text style={styles.emptyText}>No skills yet</Text>
+            <Text style={styles.emptySubtext}>
+              Complete quests with skills, or add one above
+            </Text>
+          </View>
+        )}
       </View>
     );
   }
 
   return (
-    <FlatList
-      data={stats}
-      keyExtractor={(item) => item.name}
-      renderItem={({ item, index }) => (
-        <View style={styles.row}>
-          <View style={styles.rank}>
-            <Text style={styles.rankText}>#{index + 1}</Text>
-          </View>
-          <View style={styles.info}>
-            <Text style={styles.skillName}>{item.name}</Text>
-            <Text style={styles.skillStat}>
-              {item.count} project{item.count !== 1 ? 's' : ''} · {item.xp} XP
-            </Text>
-          </View>
-          <View style={[styles.xpBadge]}>
-            <Text style={styles.xpText}>{item.xp} XP</Text>
-          </View>
-        </View>
+    <>
+      <View style={styles.listHeader}>
+        <TouchableOpacity style={styles.addFab} onPress={() => setAdding((v) => !v)}>
+          <Ionicons name={adding ? 'close' : 'add'} size={18} color="#a855f7" />
+          <Text style={styles.addFabText}>{adding ? 'Cancel' : 'New Skill'}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={stats}
+        keyExtractor={(item) => item.name}
+        ListHeaderComponent={addInputRow || undefined}
+        renderItem={({ item }) => (
+          <SkillRow
+            item={item}
+            icon={(skillIcons[item.name] as keyof typeof Ionicons.glyphMap) ?? null}
+            color={skillColors[item.name] ?? null}
+            onPressIcon={() => setPickerSkill(item.name)}
+          />
+        )}
+        removeClippedSubviews={Platform.OS !== 'web'}
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
+      />
+
+      {pickerSkill && (
+        <IconPickerModal
+          visible
+          skillName={pickerSkill}
+          currentIcon={skillIcons[pickerSkill] ?? null}
+          currentColor={skillColors[pickerSkill] ?? null}
+          onConfirm={(icon, color) => {
+            setSkillIcon(pickerSkill, icon);
+            setSkillColor(pickerSkill, color);
+          }}
+          onClose={() => setPickerSkill(null)}
+        />
       )}
-      removeClippedSubviews={Platform.OS !== 'web'}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-    />
+    </>
+  );
+}
+
+function SkillRow({
+  item,
+  icon,
+  color,
+  onPressIcon,
+}: {
+  item: SkillStat;
+  icon: keyof typeof Ionicons.glyphMap | null;
+  color: string | null;
+  onPressIcon: () => void;
+}) {
+  const progressPct = item.progress / XP_PER_LEVEL;
+  const activeColor = color ?? DEFAULT_SKILL_COLOR;
+  const hasBadge = !!icon;
+
+  return (
+    <View style={styles.row}>
+      {/* Icon / level badge */}
+      <TouchableOpacity
+        style={[
+          styles.badge,
+          hasBadge
+            ? { borderColor: activeColor + '66', backgroundColor: activeColor + '22' }
+            : { borderColor: '#1e1e2e', backgroundColor: '#0d0d14' },
+        ]}
+        onPress={onPressIcon}
+        activeOpacity={0.7}
+      >
+        {icon ? (
+          <Ionicons name={icon} size={22} color={activeColor} />
+        ) : (
+          <Ionicons name="add" size={18} color="#334155" />
+        )}
+        <Text style={[styles.levelValue, hasBadge && { color: activeColor + 'cc' }]}>
+          {item.level}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Name + progress bar */}
+      <View style={styles.info}>
+        <View style={styles.nameRow}>
+          <Text style={styles.skillName}>{item.name}</Text>
+          <Text style={[styles.xpText, { color: activeColor }]}>{item.xp} XP</Text>
+        </View>
+        <View style={styles.barTrack}>
+          <View style={[styles.barFill, { width: `${progressPct * 100}%` as any, backgroundColor: activeColor }]} />
+        </View>
+        <Text style={styles.progressLabel}>
+          {item.progress} / {XP_PER_LEVEL} to next level · {item.count} quest{item.count !== 1 ? 's' : ''}
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -86,24 +226,105 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
-    gap: 12,
+    gap: 14,
   },
-  rank: {
-    width: 32,
+  badge: {
+    width: 48,
+    height: 52,
+    borderRadius: 10,
+    backgroundColor: '#0d0d14',
+    borderWidth: 1,
+    borderColor: '#1e1e2e',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
   },
-  rankText: { color: '#475569', fontSize: 13, fontWeight: '700' },
-  info: { flex: 1 },
+  levelValue: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  info: { flex: 1, gap: 4 },
+  nameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  },
   skillName: { color: '#e2e8f0', fontSize: 15, fontWeight: '600' },
-  skillStat: { color: '#64748b', fontSize: 12, marginTop: 2 },
-  xpBadge: {
-    backgroundColor: '#7c3aed22',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  xpText: { color: '#7c3aed', fontSize: 12, fontWeight: '700' },
+  barTrack: {
+    height: 6,
+    backgroundColor: '#1e1e2e',
+    borderRadius: 3,
+    overflow: 'hidden',
   },
-  xpText: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
+  barFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  progressLabel: { color: '#475569', fontSize: 11 },
   separator: { height: 1, backgroundColor: '#1e1e2e', marginHorizontal: 16 },
+  emptyWrapper: { flex: 1 },
+  listHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1e1e2e',
+  },
+  addFab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: '#7c3aed18',
+    borderWidth: 1,
+    borderColor: '#7c3aed44',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  addFabText: { color: '#a855f7', fontSize: 13, fontWeight: '600' },
+  addRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  addInput: {
+    flex: 1,
+    backgroundColor: '#0a0a0f',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#7c3aed',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#e2e8f0',
+    fontSize: 14,
+  },
+  addConfirmBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#7c3aed44',
+    backgroundColor: '#7c3aed18',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addConfirmBtnDisabled: {
+    borderColor: '#1e1e2e',
+    backgroundColor: 'transparent',
+  },
+  addCancelBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1e1e2e',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

@@ -1,4 +1,12 @@
 /**
+ * Calculate XP awarded for a quest.
+ * Max is 50 (difficulty=100, urgency=100). Minimum is 1.
+ */
+export function calcXP(difficulty: number, urgency: number): number {
+  return Math.max(1, Math.round(50 * (difficulty / 100) * (urgency / 100)));
+}
+
+/**
  * Calculate current level from threshold.
  * Level = threshold / 100 (threshold starts at 100 and increases by 100 per level).
  */

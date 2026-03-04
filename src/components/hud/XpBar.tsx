@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useXpProgress, useLevel } from '../../store/profileStore';
+import { useXpProgress, useLevel } from '../../store/characterStore';
 
 export function XpBar() {
   const { progress, total } = useXpProgress();
@@ -10,7 +10,7 @@ export function XpBar() {
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
-        <Text style={styles.label}>LV {level}</Text>
+        <Text style={styles.label}>Character LV {level}</Text>
         <Text style={styles.progress}>
           {progress} / {total} XP
         </Text>
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   progress: {
-    color: '#64748b',
+    color: '#94a3b8',
     fontSize: 11,
   },
   track: {

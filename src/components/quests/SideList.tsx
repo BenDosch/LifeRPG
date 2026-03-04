@@ -1,14 +1,14 @@
 import React from 'react';
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
-import { useProjectStore } from '../../store/projectStore';
+import { useQuestStore } from '../../store/questStore';
 import { useUIStore } from '../../store/uiStore';
 
 import { SideItem } from './SideItem';
 
 export function SideList() {
-  const rootProjects = useProjectStore(
-    useShallow((s) => s.projects.filter((p) => p.parentId === null && !p.completedAt))
+  const rootQuests = useQuestStore(
+    useShallow((s) => s.quests.filter((p) => p.parentId === null && !p.completedAt))
   );
   const { selectedParentId, setSelectedParentId } = useUIStore(
     useShallow((s) => ({ selectedParentId: s.selectedParentId, setSelectedParentId: s.setSelectedParentId }))
@@ -16,20 +16,20 @@ export function SideList() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Projects</Text>
+      <Text style={styles.heading}>Quests</Text>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* All Projects option */}
+        {/* All Quests option */}
         <SideItem
-          project={null}
+          quest={null}
           isSelected={selectedParentId === null}
           onSelect={() => setSelectedParentId(null)}
         />
-        {rootProjects.map((project) => (
+        {rootQuests.map((quest) => (
           <SideItem
-            key={project.id}
-            project={project}
-            isSelected={selectedParentId === project.id}
-            onSelect={() => setSelectedParentId(project.id)}
+            key={quest.id}
+            quest={quest}
+            isSelected={selectedParentId === quest.id}
+            onSelect={() => setSelectedParentId(quest.id)}
           />
         ))}
       </ScrollView>

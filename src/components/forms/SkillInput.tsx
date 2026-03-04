@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,34 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSkillAutocomplete } from '../../hooks/useSkillAutocomplete';
+import { useShallow } from 'zustand/react/shallow';
+import { useQuestStore } from '../../store/questStore';
+import { SkillChip } from '../shared/SkillChip';
 
 interface SkillInputProps {
   skills: string[];
   onChange: (skills: string[]) => void;
+  onPendingChange?: (pending: string) => void;
 }
 
-export function SkillInput({ skills, onChange }: SkillInputProps) {
+export function SkillInput({ skills, onChange, onPendingChange }: SkillInputProps) {
   const [inputValue, setInputValue] = useState('');
-  const suggestions = useSkillAutocomplete(inputValue);
+  const allSkills = useQuestStore(useShallow((s) => s.getAllSkills()));
+
+  // All existing skills not yet selected, filtered by current input
+  const availableChips = useMemo(() => {
+    const q = inputValue.trim().toLowerCase();
+    return allSkills.filter((s) => {
+      if (skills.includes(s)) return false;
+      if (q) return s.toLowerCase().includes(q);
+      return true;
+    });
+  }, [allSkills, skills, inputValue]);
+
+  const handleInputChange = (text: string) => {
+    setInputValue(text);
+    onPendingChange?.(text);
+  };
 
   const addSkill = (skill: string) => {
     const trimmed = skill.trim();
@@ -24,6 +42,7 @@ export function SkillInput({ skills, onChange }: SkillInputProps) {
       onChange([...skills, trimmed]);
     }
     setInputValue('');
+    onPendingChange?.('');
   };
 
   const removeSkill = (skill: string) => {
@@ -32,24 +51,26 @@ export function SkillInput({ skills, onChange }: SkillInputProps) {
 
   return (
     <View style={styles.container}>
-      {/* Existing skills */}
-      <View style={styles.tags}>
-        {skills.map((skill) => (
-          <View key={skill} style={styles.tag}>
-            <Text style={styles.tagText}>{skill}</Text>
-            <TouchableOpacity onPress={() => removeSkill(skill)}>
-              <Ionicons name="close" size={12} color="#a855f7" />
-            </TouchableOpacity>
-          </View>
-        ))}
-      </View>
+      {/* Selected skill tags */}
+      {skills.length > 0 && (
+        <View style={styles.tags}>
+          {skills.map((skill) => (
+            <View key={skill} style={styles.tag}>
+              <SkillChip name={skill} textStyle={styles.tagText} iconSize={12} />
+              <TouchableOpacity onPress={() => removeSkill(skill)}>
+                <Ionicons name="close" size={12} color="#a855f7" />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Input */}
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
           value={inputValue}
-          onChangeText={setInputValue}
+          onChangeText={handleInputChange}
           placeholder="Add skill..."
           placeholderTextColor="#475569"
           onSubmitEditing={() => addSkill(inputValue)}
@@ -66,16 +87,16 @@ export function SkillInput({ skills, onChange }: SkillInputProps) {
         ) : null}
       </View>
 
-      {/* Autocomplete suggestions */}
-      {suggestions.length > 0 && (
-        <View style={styles.suggestions}>
-          {suggestions.map((s) => (
+      {/* Existing skill chips */}
+      {availableChips.length > 0 && (
+        <View style={styles.chipList}>
+          {availableChips.map((s) => (
             <TouchableOpacity
               key={s}
-              style={styles.suggestion}
+              style={styles.chip}
               onPress={() => addSkill(s)}
             >
-              <Text style={styles.suggestionText}>{s}</Text>
+              <SkillChip name={s} textStyle={styles.chipText} iconSize={12} />
             </TouchableOpacity>
           ))}
         </View>
@@ -115,18 +136,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   addBtn: { padding: 4 },
-  suggestions: {
-    backgroundColor: '#12121a',
-    borderRadius: 8,
+  chipList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  chip: {
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#1e1e2e',
-    overflow: 'hidden',
+    borderColor: '#334155',
+    backgroundColor: '#12121a',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
-  suggestion: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-  },
-  suggestionText: { color: '#94a3b8', fontSize: 13 },
+  chipText: { color: '#64748b', fontSize: 12 },
 });

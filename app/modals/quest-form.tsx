@@ -9,22 +9,22 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { ProjectForm } from '../../src/components/forms/ProjectForm';
-import { useProjectStore } from '../../src/store/projectStore';
+import { QuestForm } from '../../src/components/forms/QuestForm';
+import { useQuestStore } from '../../src/store/questStore';
 
-export default function ProjectFormModal() {
+export default function QuestFormModal() {
   const router = useRouter();
-  const { projectId, parentId } = useLocalSearchParams<{
-    projectId?: string;
+  const { questId, parentId } = useLocalSearchParams<{
+    questId?: string;
     parentId?: string;
   }>();
 
-  const editProject = useProjectStore((s) =>
-    projectId ? s.projects.find((p) => p.id === projectId) : null
+  const editQuest = useQuestStore((s) =>
+    questId ? s.quests.find((p) => p.id === questId) : null
   );
 
-  const handleSave = () => router.back();
-  const handleCancel = () => router.back();
+  const handleSave = () => router.dismiss();
+  const handleCancel = () => router.dismiss();
 
   return (
     <KeyboardAvoidingView
@@ -33,15 +33,15 @@ export default function ProjectFormModal() {
     >
       <View style={styles.header}>
         <Text style={styles.title}>
-          {editProject ? 'Edit Project' : 'New Project'}
+          {editQuest ? 'Edit Quest' : 'New Quest'}
         </Text>
         <TouchableOpacity onPress={handleCancel} style={styles.closeBtn}>
           <Ionicons name="close" size={24} color="#64748b" />
         </TouchableOpacity>
       </View>
 
-      <ProjectForm
-        editProject={editProject ?? null}
+      <QuestForm
+        editQuest={editQuest ?? null}
         defaultParentId={parentId ?? null}
         onSave={handleSave}
         onCancel={handleCancel}

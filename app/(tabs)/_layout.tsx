@@ -36,34 +36,29 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Projects',
+          title: 'Quests',
           tabBarIcon: ({ focused }) => (
             <TabIcon name="folder" focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="skills"
-        options={{
-          title: 'Skills',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name="flash" focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="log"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="store"
         options={{
-          title: 'Log',
+          title: 'Inventory',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="list" focused={focused} />
+            <TabIcon name="bag" focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="character"
         options={{
-          title: 'Profile',
+          title: 'Character',
           tabBarIcon: ({ focused }) => (
             <TabIcon name="person" focused={focused} />
           ),

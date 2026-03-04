@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { useProjectStore } from '../store/projectStore';
+import { useQuestStore } from '../store/questStore';
 
 export function useSkillAutocomplete(input: string) {
-  const allSkills = useProjectStore(useShallow((s) => s.getAllSkills()));
+  const allSkills = useQuestStore(useShallow((s) => s.getAllSkills()));
 
   const suggestions = useMemo(() => {
     if (!input.trim()) return [];

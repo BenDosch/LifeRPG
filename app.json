@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "LifeRPG",
-    "slug": "liferpg",
+    "slug": "roleproductiveygame",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,7 +10,9 @@
     "splash": {
       "backgroundColor": "#0a0a0f"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.liferpg.app"
@@ -34,12 +36,23 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/Electrolize-Regular.ttf"]
+          "fonts": [
+            "./assets/fonts/Electrolize-Regular.ttf"
+          ]
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "e316ad18-3e74-4d90-982f-1933687f0be5"
+      }
+    },
+    "owner": "prophetofthetao"
   }
 }

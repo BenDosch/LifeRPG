@@ -2,19 +2,19 @@ import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useShallow } from 'zustand/react/shallow';
-import { Project } from '../../types';
-import { useProjectStore } from '../../store/projectStore';
+import { Quest } from '../../types';
+import { useQuestStore } from '../../store/questStore';
 
 interface SideItemProps {
-  project: Project | null;  // null = "All Projects"
+  quest: Quest | null;  // null = "All Quests"
   isSelected: boolean;
   onSelect: () => void;
 }
 
-export function SideItem({ project, isSelected, onSelect }: SideItemProps) {
-  const children = useProjectStore(
+export function SideItem({ quest, isSelected, onSelect }: SideItemProps) {
+  const children = useQuestStore(
     useShallow((s) =>
-      project ? s.projects.filter((p) => p.parentId === project.id && !p.completedAt) : []
+      quest ? s.quests.filter((p) => p.parentId === quest.id && !p.completedAt) : []
     )
   );
 
@@ -25,7 +25,7 @@ export function SideItem({ project, isSelected, onSelect }: SideItemProps) {
     >
       <View style={styles.content}>
         <Ionicons
-          name={project ? 'folder-outline' : 'grid-outline'}
+          name={quest ? 'folder-outline' : 'grid-outline'}
           size={16}
           color={isSelected ? '#a855f7' : '#64748b'}
         />
@@ -33,7 +33,7 @@ export function SideItem({ project, isSelected, onSelect }: SideItemProps) {
           style={[styles.name, isSelected && styles.nameSelected]}
           numberOfLines={1}
         >
-          {project ? project.name : 'All Projects'}
+          {quest ? quest.name : 'All Quests'}
         </Text>
       </View>
       {children.length > 0 && (

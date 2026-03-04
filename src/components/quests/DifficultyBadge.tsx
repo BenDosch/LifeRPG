@@ -1,16 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Difficulty, DIFFICULTY_COLORS, DIFFICULTY_LABELS } from '../../types';
+import { getTierLabel, getTierColor } from '../../types';
 
 interface DifficultyBadgeProps {
-  difficulty: Difficulty;
+  value: number; // 1–100
 }
 
-export function DifficultyBadge({ difficulty }: DifficultyBadgeProps) {
-  const color = DIFFICULTY_COLORS[difficulty];
+export function DifficultyBadge({ value }: DifficultyBadgeProps) {
+  const color = getTierColor(value);
   return (
     <View style={[styles.badge, { borderColor: color }]}>
-      <Text style={[styles.text, { color }]}>{DIFFICULTY_LABELS[difficulty]}</Text>
+      <Text style={[styles.text, { color }]}>{getTierLabel(value)}</Text>
     </View>
   );
 }

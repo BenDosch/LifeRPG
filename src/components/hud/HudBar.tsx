@@ -1,24 +1,49 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useProfileStore } from '../../store/profileStore';
+import { Ionicons } from '@expo/vector-icons';
+import { useShallow } from 'zustand/react/shallow';
+import { useCharacterStore } from '../../store/characterStore';
+import { useQuestStore } from '../../store/questStore';
+import { getClassDef } from '../../data/heroClasses';
+import { getClassLevel } from '../../utils/classLevels';
 import { XpBar } from './XpBar';
-import { MomentumBar } from './MomentumBar';
+import { EnergyBar } from './EnergyBar';
+import { HydrationBar } from './HydrationBar';
 
 export function HudBar() {
-  const name = useProfileStore((s) => s.name);
-  const title = useProfileStore((s) => s.title);
+  const { name, heroClass, customClasses, gold } = useCharacterStore(
+    useShallow((s) => ({ name: s.name, heroClass: s.heroClass, customClasses: s.customClasses, gold: s.gold }))
+  );
+  const log = useQuestStore((s) => s.log);
+  const classDef = getClassDef(heroClass, customClasses);
+  const classColor = classDef?.color ?? '#7c3aed';
+  const classLevel = getClassLevel(log, heroClass);
 
   return (
     <SafeAreaView edges={['top']} style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.identity}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.title}>{title}</Text>
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{name}</Text>
+            <View style={styles.classRow}>
+              {classDef && <Ionicons name={classDef.icon as any} size={11} color={classColor} />}
+              <Text style={[styles.title, { color: classColor }]}>
+                Level {classLevel} {heroClass}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.badges}>
+            <View style={styles.goldBadge}>
+              <Ionicons name="logo-usd" size={11} color="#FFD700" />
+              <Text style={styles.goldText}>{gold}</Text>
+            </View>
+          </View>
         </View>
         <View style={styles.bars}>
           <XpBar />
-          <MomentumBar />
+          <EnergyBar />
+          <HydrationBar />
         </View>
       </View>
     </SafeAreaView>
@@ -38,7 +63,17 @@ const styles = StyleSheet.create({
   identity: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'baseline',
+    alignItems: 'center',
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  classRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   name: {
     color: '#e2e8f0',
@@ -49,6 +84,28 @@ const styles = StyleSheet.create({
   title: {
     color: '#7c3aed',
     fontSize: 12,
+    fontFamily: 'Electrolize-Regular',
+  },
+  badges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  goldBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#FFD70018',
+    borderWidth: 1,
+    borderColor: '#FFD70044',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  goldText: {
+    color: '#FFD700',
+    fontSize: 13,
+    fontWeight: '700',
     fontFamily: 'Electrolize-Regular',
   },
   bars: { gap: 6 },
