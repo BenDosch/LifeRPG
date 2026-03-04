@@ -4,13 +4,14 @@ import { getTierLabel, getTierColor } from '../../types';
 
 interface DifficultyBadgeProps {
   value: number; // 1–100
+  labelFn?: (value: number) => string;
 }
 
-export function DifficultyBadge({ value }: DifficultyBadgeProps) {
+export function DifficultyBadge({ value, labelFn = getTierLabel }: DifficultyBadgeProps) {
   const color = getTierColor(value);
   return (
     <View style={[styles.badge, { borderColor: color }]}>
-      <Text style={[styles.text, { color }]}>{getTierLabel(value)}</Text>
+      <Text style={[styles.text, { color }]}>{labelFn(value)}</Text>
     </View>
   );
 }

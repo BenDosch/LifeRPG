@@ -50,6 +50,10 @@ export function ShopItemCard({ item, userGold, onEdit, onBuy }: ShopItemCardProp
           </View>
         </View>
 
+        {!!item.description && (
+          <Text style={styles.description}>{item.description}</Text>
+        )}
+
         <View style={styles.meta}>
           <View style={styles.goldBadge}>
             <Ionicons name="logo-usd" size={10} color="#FFD700" />
@@ -141,6 +145,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     lineHeight: 20,
+  },
+  description: {
+    color: '#64748b',
+    fontSize: 12,
+    lineHeight: 17,
   },
   actions: {
     flexDirection: 'row',

@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuestStore } from '../../store/questStore';
-import { getTierColor, getTierLabel, LogEntry } from '../../types';
+import { getTierColor, getTierLabel, getUrgencyLabel, LogEntry } from '../../types';
 import { formatDate, groupByDate } from '../../utils/date';
 import { SkillChip } from '../shared/SkillChip';
 
@@ -119,7 +119,7 @@ export function LogList() {
               <View style={styles.entryMeta}>
                 <Text style={styles.metaLabel}>Difficulty: <Text style={[styles.diffLabel, { color: getTierColor(entry.difficulty) }]}>{getTierLabel(entry.difficulty)}</Text></Text>
                 <Text style={styles.metaSep}>·</Text>
-                <Text style={styles.metaLabel}>Urgency: <Text style={[styles.diffLabel, { color: getTierColor(entry.urgency) }]}>{getTierLabel(entry.urgency)}</Text></Text>
+                <Text style={styles.metaLabel}>Urgency: <Text style={[styles.diffLabel, { color: getTierColor(entry.urgency) }]}>{getUrgencyLabel(entry.urgency)}</Text></Text>
                 {entry.skills.length > 0 && (
                   <View style={styles.skillsRow}>
                     {entry.skills.map((skill) => (

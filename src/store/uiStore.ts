@@ -13,6 +13,22 @@ export interface LevelUpEntry {
   color?: string;
 }
 
+export interface QuestCompleteEvent {
+  questName: string;
+  questIcon: string | null;
+  questIconColor: string | null;
+  xpAwarded: number;
+  goldAwarded: number;
+  hydrationReward: number;
+  energyReward: number;
+  hydrationCost: number;
+  energyCost: number;
+  skills: string[];
+  xpClass: string | undefined;
+  pendingLevelUpEntries: LevelUpEntry[];
+  pendingNextDueDateId: string | null;
+}
+
 interface UIState {
   searchQuery: string;
   urgencyFilter: Tier | null;
@@ -34,6 +50,13 @@ interface UIState {
   levelUpEvent: LevelUpEntry[] | null;
   triggerLevelUp: (entries: LevelUpEntry[]) => void;
   clearLevelUp: () => void;
+
+  questCompleteEvent: QuestCompleteEvent | null;
+  triggerQuestComplete: (event: QuestCompleteEvent) => void;
+  clearQuestComplete: () => void;
+
+  questDueDateId: string | null;
+  clearQuestDueDateId: () => void;
 
   classPickerOpen: boolean;
   openClassPicker: () => void;
@@ -69,6 +92,38 @@ export const useUIStore = create<UIState>()((set) => ({
   triggerLevelUp: (entries) =>
     set((s) => ({ levelUpEvent: [...(s.levelUpEvent ?? []), ...entries] })),
   clearLevelUp: () => set({ levelUpEvent: null }),
+
+  questCompleteEvent: null,
+  // Last-write wins on rewards; level-up entries are accumulated across recursive completions
+  triggerQuestComplete: (event) =>
+    set((s) => ({
+      questCompleteEvent: {
+        ...event,
+        pendingLevelUpEntries: [
+          ...(s.questCompleteEvent?.pendingLevelUpEntries ?? []),
+          ...event.pendingLevelUpEntries,
+        ],
+        pendingNextDueDateId:
+          s.questCompleteEvent?.pendingNextDueDateId ?? event.pendingNextDueDateId,
+      },
+    })),
+  clearQuestComplete: () =>
+    set((s) => {
+      const event = s.questCompleteEvent;
+      if (!event) return {};
+      return {
+        questCompleteEvent: null,
+        ...(event.pendingLevelUpEntries.length > 0
+          ? { levelUpEvent: event.pendingLevelUpEntries }
+          : {}),
+        ...(event.pendingNextDueDateId
+          ? { questDueDateId: event.pendingNextDueDateId }
+          : {}),
+      };
+    }),
+
+  questDueDateId: null,
+  clearQuestDueDateId: () => set({ questDueDateId: null }),
 
   classPickerOpen: false,
   openClassPicker: () => set({ classPickerOpen: true }),

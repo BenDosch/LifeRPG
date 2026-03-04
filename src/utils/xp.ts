@@ -3,15 +3,22 @@
  * Max is 50 (difficulty=100, urgency=100). Minimum is 1.
  */
 export function calcXP(difficulty: number, urgency: number): number {
-  return Math.max(1, Math.round(50 * (difficulty / 100) * (urgency / 100)));
+  return Math.max(1, Math.round(100 * (difficulty / 100) * (urgency / 100)));
 }
 
 /**
  * Calculate current level from threshold.
- * Level = threshold / 100 (threshold starts at 100 and increases by 100 per level).
+ * Level 0→1 costs 100 XP, level N→N+1 costs (N+2)*100 XP.
+ * Threshold after N level-ups = 100 + 200 + 300 + ... + (N+1)*100 accumulated.
  */
 export function calcLevel(threshold: number): number {
-  return Math.floor(threshold / 100);
+  let level = 0;
+  let t = 100;
+  while (t < threshold) {
+    t += (level + 2) * 100;
+    level++;
+  }
+  return level;
 }
 
 /**
@@ -19,11 +26,13 @@ export function calcLevel(threshold: number): number {
  * Returns how many XP into the current level the player is.
  */
 export function calcXpProgress(points: number, threshold: number): number {
-  return points - (threshold - 100);
+  const level = calcLevel(threshold);
+  return points - (threshold - (level + 1) * 100);
 }
 
 /**
  * Apply XP to current points/threshold.
+ * Each level-up from level N to N+1 increases threshold by (N+2)*100.
  * Returns new state and whether a level-up occurred.
  */
 export function applyXP(
@@ -33,10 +42,12 @@ export function applyXP(
 ): { points: number; threshold: number; didLevelUp: boolean; newLevel: number } {
   let newPoints = points + xpGained;
   let newThreshold = threshold;
+  let level = calcLevel(threshold);
   let didLevelUp = false;
 
   while (newPoints >= newThreshold) {
-    newThreshold += 100;
+    newThreshold += (level + 2) * 100;
+    level++;
     didLevelUp = true;
   }
 
@@ -44,6 +55,6 @@ export function applyXP(
     points: newPoints,
     threshold: newThreshold,
     didLevelUp,
-    newLevel: calcLevel(newThreshold),
+    newLevel: level,
   };
 }

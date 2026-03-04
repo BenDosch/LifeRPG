@@ -7,6 +7,13 @@ export const TIER_LABELS: Record<Tier, string> = {
   very_hard: 'Very Hard',
 };
 
+export const URGENCY_LABELS: Record<Tier, string> = {
+  easy: 'Low',
+  medium: 'Medium',
+  hard: 'High',
+  very_hard: 'Critical',
+};
+
 export const TIER_COLORS: Record<Tier, string> = {
   easy: '#ADFF2F',
   medium: '#FFD700',
@@ -25,6 +32,10 @@ export function getTierLabel(value: number): string {
   return TIER_LABELS[getTier(value)];
 }
 
+export function getUrgencyLabel(value: number): string {
+  return URGENCY_LABELS[getTier(value)];
+}
+
 export function getTierColor(value: number): string {
   return TIER_COLORS[getTier(value)];
 }
@@ -40,6 +51,7 @@ export type RepeatSchedule =
 export interface Quest {
   id: string;           // UUID v4
   name: string;
+  details: string;
   difficulty: number;   // 1–100
   urgency: number;   // 1–100
   skills: string[];
@@ -57,9 +69,11 @@ export interface Quest {
   energyCost: number;      // energy subtracted on completion
   autoCompleteOnSubQuests: boolean; // auto-completes when all sub-quests are done
   dueDate: string | null;           // ISO date YYYY-MM-DD
+  dueTime: string | null;           // optional time HH:MM
   dueDateSchedule: RepeatSchedule | null; // auto-advance due date on completion
   icon: string | null;
   iconColor: string | null;
+  classQuest: string | null; // class name whose XP pool receives completion XP (null = equipped class)
 }
 
 export interface Character {
@@ -109,6 +123,7 @@ export interface HeroClassDef {
 export interface ShopItem {
   id: string;
   name: string;
+  description: string;
   cost: number;             // gold price
   quantity: number | null;  // null = infinite
   energyEffect: number;     // % change on use (positive = gain, negative = loss)

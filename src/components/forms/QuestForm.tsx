@@ -9,15 +9,18 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Quest, RepeatSchedule, getTierLabel, getTierColor } from '../../types';
+import { Quest, RepeatSchedule, getTierLabel, getTierColor, getUrgencyLabel } from '../../types';
 import { IconPickerModal } from '../skills/IconPickerModal';
 import { calcXP } from '../../utils/xp';
 import { SliderInput } from '../shared/SliderInput';
 import { SelectPicker } from '../shared/SelectPicker';
 import { SkillInput } from './SkillInput';
 import { DateInput } from '../shared/DateInput';
+import { TimeInput } from '../shared/TimeInput';
 import { useShallow } from 'zustand/react/shallow';
 import { useQuestStore } from '../../store/questStore';
+import { useCharacterStore } from '../../store/characterStore';
+import { HERO_CLASSES } from '../../data/heroClasses';
 import { Tooltip } from '../shared/Tooltip';
 
 interface QuestFormProps {
@@ -34,6 +37,7 @@ export function QuestForm({
   onCancel,
 }: QuestFormProps) {
   const [name, setName] = useState('');
+  const [details, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState(50);
   const [urgency, setUrgency] = useState(50);
   const [skills, setSkills] = useState<string[]>([]);
@@ -49,11 +53,14 @@ export function QuestForm({
   const [hydrationCost, setHydrationCost] = useState(0);
   const [energyCost, setEnergyCost] = useState(0);
   const [dueDate, setDueDate] = useState<string | null>(null);
+  const [dueTime, setDueTime] = useState<string | null>(null);
   type DueDateScheduleType = Exclude<RepeatSchedule['type'], 'unlimited'>;
   const [dueDateScheduleEnabled, setDueDateScheduleEnabled] = useState(false);
   const [dueDateScheduleType, setDueDateScheduleType] = useState<DueDateScheduleType>('days');
   const [dueDateScheduleEvery, setDueDateScheduleEvery] = useState(1);
   const [dueDateScheduleWeekdays, setDueDateScheduleWeekdays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [classQuestEnabled, setClassQuestEnabled] = useState(false);
+  const [classQuest, setClassQuest] = useState<string | null>(null);
   const [icon, setIcon] = useState<string | null>(null);
   const [iconColor, setIconColor] = useState<string | null>(null);
   const [showIconPicker, setShowIconPicker] = useState(false);
@@ -73,11 +80,19 @@ export function QuestForm({
   const addQuest = useQuestStore((s) => s.addQuest);
   const updateQuest = useQuestStore((s) => s.updateQuest);
 
+  const { heroClass, unlockedClasses, customClasses } = useCharacterStore(
+    useShallow((s) => ({ heroClass: s.heroClass, unlockedClasses: s.unlockedClasses, customClasses: s.customClasses }))
+  );
+  const availableClasses = [...HERO_CLASSES, ...customClasses].filter(
+    (c) => c.name === heroClass || unlockedClasses.includes(c.name) || c.requirements.length === 0
+  );
+
   const parentOptions = rootQuests.map((p) => ({ label: p.name, value: p.id }));
 
   useEffect(() => {
     if (editQuest) {
       setName(editQuest.name);
+      setDescription(editQuest.details ?? '');
       setDifficulty(editQuest.difficulty);
       setUrgency(editQuest.urgency);
       setSkills(editQuest.skills);
@@ -93,6 +108,7 @@ export function QuestForm({
       setHydrationCost(editQuest.hydrationCost ?? 0);
       setEnergyCost(editQuest.energyCost ?? 0);
       setDueDate(editQuest.dueDate ?? null);
+      setDueTime(editQuest.dueTime ?? null);
       const ds = editQuest.dueDateSchedule;
       if (ds && ds.type !== 'unlimited') {
         setDueDateScheduleEnabled(true);
@@ -105,6 +121,8 @@ export function QuestForm({
         setDueDateScheduleEvery(1);
         setDueDateScheduleWeekdays([1, 2, 3, 4, 5]);
       }
+      setClassQuestEnabled(!!editQuest.classQuest);
+      setClassQuest(editQuest.classQuest ?? null);
       setIcon(editQuest.icon ?? null);
       setIconColor(editQuest.iconColor ?? null);
       setHasParent(!!editQuest.parentId);
@@ -154,19 +172,19 @@ export function QuestForm({
     const repeatSchedule = repeatable ? buildSchedule() : { type: 'unlimited' as const };
     if (editQuest) {
       updateQuest(editQuest.id, {
-        name: name.trim(), difficulty, urgency, skills: finalSkills,
+        name: name.trim(), details, difficulty, urgency, skills: finalSkills,
         repeatable, repeatSchedule, parentId: hasParent ? parentId : null,
         autoCompleteOnSubQuests: hasParent ? false : autoCompleteOnSubQuests,
-        goldReward, hydrationReward, energyReward, hydrationCost, energyCost, dueDate, dueDateSchedule: buildDueDateSchedule(),
-        icon, iconColor,
+        goldReward, hydrationReward, energyReward, hydrationCost, energyCost, dueDate, dueTime, dueDateSchedule: buildDueDateSchedule(),
+        icon, iconColor, classQuest,
       });
     } else {
       addQuest({
-        name: name.trim(), difficulty, urgency, skills: finalSkills,
+        name: name.trim(), details, difficulty, urgency, skills: finalSkills,
         repeatable, repeatSchedule, parentId: hasParent ? parentId : null,
         autoCompleteOnSubQuests: hasParent ? false : autoCompleteOnSubQuests,
-        goldReward, hydrationReward, energyReward, hydrationCost, energyCost, dueDate, dueDateSchedule: buildDueDateSchedule(),
-        icon, iconColor,
+        goldReward, hydrationReward, energyReward, hydrationCost, energyCost, dueDate, dueTime, dueDateSchedule: buildDueDateSchedule(),
+        icon, iconColor, classQuest,
       });
     }
     // Propagate parent auto-complete preference to the parent quest
@@ -224,6 +242,19 @@ export function QuestForm({
           <Ionicons name="chevron-forward" size={16} color="#475569" />
         </TouchableOpacity>
 
+        {/* Details */}
+        <Text style={styles.sectionLabel}>Details</Text>
+        <TextInput
+          style={[styles.textInput, styles.detailsInput]}
+          value={details}
+          onChangeText={setDescription}
+          placeholder="Optional details..."
+          placeholderTextColor="#475569"
+          multiline
+          returnKeyType="done"
+          blurOnSubmit
+        />
+
         {/* Difficulty */}
         <View style={styles.sliderHeader}>
           <Text style={styles.sectionLabel}>Difficulty</Text>
@@ -238,17 +269,53 @@ export function QuestForm({
         <View style={styles.sliderHeader}>
           <Text style={styles.sectionLabel}>Urgency</Text>
           <View style={styles.sliderMeta}>
-            <Text style={[styles.tierLabel, { color: impColor }]}>{getTierLabel(urgency)}</Text>
+            <Text style={[styles.tierLabel, { color: impColor }]}>{getUrgencyLabel(urgency)}</Text>
             <Text style={styles.sliderValue}>{urgency}%</Text>
           </View>
         </View>
         <SliderInput value={urgency} onValueChange={setUrgency} color={impColor} />
 
+        {/* Class Quest */}
+        <View style={styles.switchRow}>
+          <View>
+            <Text style={styles.sectionLabel}>Class Quest</Text>
+            <Text style={styles.switchHint}>XP goes to a specific class instead of your equipped class</Text>
+          </View>
+          <Switch
+            value={classQuestEnabled}
+            onValueChange={(v) => {
+              setClassQuestEnabled(v);
+              if (!v) setClassQuest(null);
+            }}
+            trackColor={{ true: '#7c3aed' }}
+            thumbColor="#fff"
+          />
+        </View>
+        {classQuestEnabled && (
+          <View style={styles.classChipRow}>
+            {availableClasses.map((cls) => (
+              <TouchableOpacity
+                key={cls.name}
+                style={[
+                  styles.classChip,
+                  classQuest === cls.name && { borderColor: cls.color + '99', backgroundColor: cls.color + '22' },
+                ]}
+                onPress={() => setClassQuest(cls.name)}
+              >
+                <Ionicons name={cls.icon as any} size={13} color={classQuest === cls.name ? cls.color : '#64748b'} />
+                <Text style={[styles.classChipText, classQuest === cls.name && { color: cls.color, fontWeight: '600' }]}>
+                  {cls.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
         {/* Rewards */}
         <Text style={styles.sectionLabel}>Rewards</Text>
         <View style={styles.rewardRow}>
           <View style={styles.xpPreview}>
-            <Ionicons name="flash" size={14} color="#a855f7" />
+            <Ionicons name="sparkles-sharp" size={14} color="#a855f7" />
             <Text style={styles.xpPreviewText}>{xpPreview} XP</Text>
           </View>
           <View style={styles.goldInputRow}>
@@ -370,7 +437,13 @@ export function QuestForm({
         {!repeatable && (
           <>
             <Text style={styles.sectionLabel}>Due Date</Text>
-            <DateInput value={dueDate} onChange={setDueDate} />
+            <DateInput
+              value={dueDate}
+              onChange={(v) => { setDueDate(v); if (!v) setDueTime(null); }}
+            />
+            {dueDate && (
+              <TimeInput value={dueTime} onChange={setDueTime} />
+            )}
           </>
         )}
 
@@ -492,7 +565,13 @@ export function QuestForm({
             {dueDateScheduleEnabled && (
               <>
                 <Text style={styles.sectionLabel}>Starting</Text>
-                <DateInput value={dueDate} onChange={setDueDate} />
+                <DateInput
+                  value={dueDate}
+                  onChange={(v) => { setDueDate(v); if (!v) setDueTime(null); }}
+                />
+                {dueDate && (
+                  <TimeInput value={dueTime} onChange={setDueTime} />
+                )}
               </>
             )}
           </>
@@ -621,6 +700,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: '#e2e8f0',
     fontSize: 15,
+  },
+  detailsInput: {
+    minHeight: 72,
+    textAlignVertical: 'top',
+    fontSize: 13,
   },
   sliderHeader: {
     flexDirection: 'row',
@@ -873,6 +957,29 @@ const styles = StyleSheet.create({
     color: '#334155',
     fontSize: 14,
   },
+  classChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  classChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1e1e2e',
+    backgroundColor: '#0a0a0f',
+  },
+  classChipActive: {
+    borderColor: '#7c3aed',
+    backgroundColor: '#7c3aed22',
+  },
+  classChipText: { color: '#64748b', fontSize: 13 },
+  classChipTextActive: { color: '#a855f7', fontWeight: '600' },
   subQuestList: {
     borderWidth: 1,
     borderColor: '#1e1e2e',

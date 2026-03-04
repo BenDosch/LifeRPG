@@ -13,11 +13,18 @@ import { useUIStore, SortOrder, DueDateFilter } from '../../store/uiStore';
 import { Tier } from '../../types';
 import { Tooltip } from '../shared/Tooltip';
 
-const TIER_OPTIONS: { label: string; value: Tier }[] = [
+const DIFFICULTY_OPTIONS: { label: string; value: Tier }[] = [
   { label: 'Easy', value: 'easy' },
   { label: 'Medium', value: 'medium' },
   { label: 'Hard', value: 'hard' },
   { label: 'Very Hard', value: 'very_hard' },
+];
+
+const URGENCY_OPTIONS: { label: string; value: Tier }[] = [
+  { label: 'Low', value: 'easy' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'High', value: 'hard' },
+  { label: 'Critical', value: 'very_hard' },
 ];
 
 export function FilterBar() {
@@ -121,7 +128,7 @@ export function FilterBar() {
             <Text style={styles.filterLabel}>Difficulty</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
               <View style={styles.chips}>
-                {TIER_OPTIONS.map((opt) => (
+                {DIFFICULTY_OPTIONS.map((opt) => (
                   <TouchableOpacity
                     key={'d-' + opt.value}
                     style={[styles.chip, difficultyFilter === opt.value && styles.chipActive]}
@@ -141,7 +148,7 @@ export function FilterBar() {
             <Text style={styles.filterLabel}>Urgency</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
               <View style={styles.chips}>
-                {TIER_OPTIONS.map((opt) => (
+                {URGENCY_OPTIONS.map((opt) => (
                   <TouchableOpacity
                     key={'i-' + opt.value}
                     style={[styles.chip, urgencyFilter === opt.value && styles.chipActiveImp]}

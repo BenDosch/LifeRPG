@@ -23,8 +23,9 @@ export default function QuestFormModal() {
     questId ? s.quests.find((p) => p.id === questId) : null
   );
 
-  const handleSave = () => router.dismiss();
-  const handleCancel = () => router.dismiss();
+  const dismiss = () => router.canDismiss() ? router.dismiss() : router.replace('/');
+  const handleSave = () => dismiss();
+  const handleCancel = () => dismiss();
 
   return (
     <KeyboardAvoidingView

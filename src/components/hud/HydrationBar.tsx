@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useShallow } from 'zustand/react/shallow';
 import { useCharacterStore } from '../../store/characterStore';
@@ -21,8 +21,25 @@ export function HydrationBar() {
     }))
   );
   const ratio = Math.min(1, Math.max(0, hydration / 100));
+  const overhydrated = hydration > 100;
 
   const color = lerpColor('#ef4444', '#0ea5e9', ratio);
+
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!overhydrated) {
+      glowAnim.setValue(0);
+      return;
+    }
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, { toValue: 0.8, duration: 4000, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 4000, useNativeDriver: true }),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [overhydrated]);
 
   const btnLabel = waterUnit === 'imperial' ? 'Drank ~8oz' : 'Drank ~240ml';
 
@@ -33,10 +50,21 @@ export function HydrationBar() {
           <Text style={styles.label}>HYDRATION</Text>
           <Text style={[styles.value, { color }]}>{Math.round(hydration)}%</Text>
         </View>
-        <View style={styles.track}>
-          <View
-            style={[styles.fill, { width: `${ratio * 100}%` as any, backgroundColor: color }]}
-          />
+        <View style={styles.trackOuter}>
+          {overhydrated && (
+            <Animated.View
+              style={[
+                styles.glow,
+                { opacity: glowAnim },
+                Platform.OS === 'web' && ({ boxShadow: '0 0 6px 3px #0ea5e9' } as any),
+              ]}
+            />
+          )}
+          <View style={styles.track}>
+            <View
+              style={[styles.fill, { width: `${ratio * 100}%` as any, backgroundColor: color }]}
+            />
+          </View>
         </View>
       </View>
       <TouchableOpacity style={styles.btn} onPress={drinkWater}>
@@ -68,8 +96,29 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
-  track: {
+  trackOuter: {
     height: 4,
+  },
+  glow: {
+    position: 'absolute',
+    top: -4,
+    left: 0,
+    right: 0,
+    bottom: -4,
+    borderRadius: 3,
+    backgroundColor: '#0ea5e9',
+    shadowColor: '#0ea5e9',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  track: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: '#1e1e2e',
     borderRadius: 2,
     overflow: 'hidden',

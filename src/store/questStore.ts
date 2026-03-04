@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import { Quest, LogEntry, RepeatSchedule } from '../types';
 import { useCharacterStore } from './characterStore';
-import { useUIStore, LevelUpEntry } from './uiStore';
+import { useUIStore, LevelUpEntry, QuestCompleteEvent } from './uiStore';
 import { calcLevel, calcXP } from '../utils/xp';
 import { getSkillLevels, getClassLevels } from '../utils/skillLevels';
 import { HERO_CLASSES, getClassDef } from '../data/heroClasses';
@@ -14,6 +14,7 @@ import { advanceDueDate } from '../utils/dueDate';
 
 interface QuestInput {
   name: string;
+  details?: string;
   difficulty: number;   // 1–100
   urgency: number;   // 1–100
   skills: string[];
@@ -27,9 +28,11 @@ interface QuestInput {
   energyCost?: number;
   autoCompleteOnSubQuests?: boolean;
   dueDate?: string | null;
+  dueTime?: string | null;
   dueDateSchedule?: RepeatSchedule | null;
   icon?: string | null;
   iconColor?: string | null;
+  classQuest?: string | null;
 }
 
 interface QuestState {
@@ -43,6 +46,7 @@ interface QuestState {
   updateQuest: (id: string, input: Partial<QuestInput>) => void;
   deleteQuest: (id: string) => void;
   completeQuest: (id: string) => { xpAwarded: number; goldAwarded: number; skills: string[]; needsNextDueDate: boolean; parentNeedsNextDueDate?: string };
+  skipQuest: (id: string) => { needsNextDueDate: boolean };
   uncompleteQuest: (id: string) => void;
   resetQuest: (id: string) => void;
   setSkillIcon: (skillName: string, icon: string | null) => void;
@@ -69,6 +73,7 @@ export const useQuestStore = create<QuestState>()(
         const quest: Quest = {
           id: uuidv4(),
           name: input.name,
+          details: input.details ?? '',
           difficulty: input.difficulty,
           urgency: input.urgency,
           skills: input.skills,
@@ -86,9 +91,11 @@ export const useQuestStore = create<QuestState>()(
           energyCost: input.energyCost ?? 0,
           autoCompleteOnSubQuests: input.autoCompleteOnSubQuests ?? false,
           dueDate: input.dueDate ?? null,
+          dueTime: input.dueTime ?? null,
           dueDateSchedule: input.dueDateSchedule ?? null,
           icon: input.icon ?? null,
           iconColor: input.iconColor ?? null,
+          classQuest: input.classQuest ?? null,
         };
         set((s) => ({ quests: [...s.quests, quest] }));
 
@@ -203,7 +210,7 @@ export const useQuestStore = create<QuestState>()(
               skills: quest.skills,
               completedAt,
               levelAtCompletion,
-              equippedClass: characterStore.heroClass || undefined,
+              equippedClass: (quest.classQuest ?? characterStore.heroClass) || undefined,
             },
             ...s.log,
           ],
@@ -273,10 +280,6 @@ export const useQuestStore = create<QuestState>()(
           }
         }
 
-        if (levelUpEntries.length > 0) {
-          useUIStore.getState().triggerLevelUp(levelUpEntries);
-        }
-
         // Auto-complete parent if all sub-quests are now done
         let parentNeedsNextDueDate: string | undefined;
         if (quest.parentId) {
@@ -296,7 +299,40 @@ export const useQuestStore = create<QuestState>()(
           }
         }
 
+        // Trigger quest-complete popup (level-up entries are deferred until popup is dismissed)
+        useUIStore.getState().triggerQuestComplete({
+          questName: quest.name,
+          questIcon: quest.icon,
+          questIconColor: quest.iconColor,
+          xpAwarded,
+          goldAwarded,
+          hydrationReward: quest.hydrationReward,
+          energyReward: quest.energyReward,
+          hydrationCost: quest.hydrationCost,
+          energyCost: quest.energyCost,
+          skills: quest.skills,
+          xpClass: (quest.classQuest ?? characterStore.heroClass) || undefined,
+          pendingLevelUpEntries: levelUpEntries,
+          pendingNextDueDateId: needsNextDueDate ? id : (parentNeedsNextDueDate ?? null),
+        } satisfies QuestCompleteEvent);
+
         return { xpAwarded, goldAwarded, skills: quest.skills, needsNextDueDate, parentNeedsNextDueDate };
+      },
+
+      skipQuest: (id) => {
+        const quest = get().quests.find((p) => p.id === id);
+        if (!quest || !quest.repeatable || !quest.dueDate) return { needsNextDueDate: false };
+
+        if (quest.dueDateSchedule) {
+          const nextDueDate = advanceDueDate(quest.dueDateSchedule, new Date());
+          set((s) => ({
+            quests: s.quests.map((p) => p.id === id ? { ...p, dueDate: nextDueDate } : p),
+          }));
+          return { needsNextDueDate: false };
+        }
+
+        // No auto-schedule — caller must prompt user for next date
+        return { needsNextDueDate: true };
       },
 
       uncompleteQuest: (id) => {

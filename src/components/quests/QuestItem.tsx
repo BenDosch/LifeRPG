@@ -1,16 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useShallow } from 'zustand/react/shallow';
-import { Quest, getTierColor } from '../../types';
+import { Quest, getTierColor, getUrgencyLabel } from '../../types';
 import { isQuestAvailable, nextAvailableText } from '../../utils/repeat';
 import { calcXP } from '../../utils/xp';
 import { DifficultyBadge } from './DifficultyBadge';
@@ -20,6 +19,7 @@ import { SkillChip } from '../shared/SkillChip';
 import { DateInput } from '../shared/DateInput';
 import { tomorrowString } from '../../utils/dueDate';
 import { useQuestStore } from '../../store/questStore';
+import { useUIStore } from '../../store/uiStore';
 
 type DueDateStatus = 'overdue' | 'today' | 'soon' | 'ok';
 const DUE_COLORS: Record<DueDateStatus, string> = {
@@ -29,17 +29,23 @@ const DUE_COLORS: Record<DueDateStatus, string> = {
   ok:      '#475569',
 };
 
-function getDueInfo(dueDate: string): { text: string; status: DueDateStatus } {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const due = new Date(dueDate + 'T00:00:00');
-  const diff = Math.round((due.getTime() - today.getTime()) / 86400000);
-  if (diff < 0)  return { text: `${Math.abs(diff)}d overdue`, status: 'overdue' };
-  if (diff === 0) return { text: 'Due today',               status: 'today' };
-  if (diff === 1) return { text: 'Tomorrow',                status: 'soon' };
-  if (diff <= 3)  return { text: `${diff}d left`,           status: 'soon' };
+function getDueInfo(dueDate: string, dueTime: string | null): { text: string; status: DueDateStatus } {
+  const now = new Date();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const dueDay = new Date(dueDate + 'T00:00:00');
+  const due = dueTime ? new Date(`${dueDate}T${dueTime}:00`) : dueDay;
+  const diff = Math.round((dueDay.getTime() - today.getTime()) / 86400000);
+  const timeStr = dueTime ? ` ${dueTime}` : '';
+  const isOverdue = dueTime ? due < now : diff < 0;
+  if (isOverdue) {
+    const daysStr = Math.abs(diff) > 0 ? `${Math.abs(diff)}d ` : '';
+    return { text: `${daysStr}overdue${timeStr}`, status: 'overdue' };
+  }
+  if (diff === 0) return { text: `Due today${timeStr}`, status: 'today' };
+  if (diff === 1) return { text: `Tomorrow${timeStr}`,  status: 'soon' };
+  if (diff <= 3)  return { text: `${diff}d left${timeStr}`, status: 'soon' };
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return { text: `${due.getDate()} ${months[due.getMonth()]}`, status: 'ok' };
+  return { text: `${dueDay.getDate()} ${months[dueDay.getMonth()]}${timeStr}`, status: 'ok' };
 }
 
 interface QuestItemProps {
@@ -57,9 +63,13 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
   const [nextDueDate, setNextDueDate] = useState<string | null>(null);
 
   const completeQuest = useQuestStore((s) => s.completeQuest);
+  const skipQuest = useQuestStore((s) => s.skipQuest);
   const deleteQuest = useQuestStore((s) => s.deleteQuest);
   const resetQuest = useQuestStore((s) => s.resetQuest);
   const updateQuest = useQuestStore((s) => s.updateQuest);
+
+  const questDueDateId = useUIStore((s) => s.questDueDateId);
+  const clearQuestDueDateId = useUIStore((s) => s.clearQuestDueDateId);
 
   // All children for the checklist (complete + incomplete)
   const children = useQuestStore(
@@ -85,19 +95,21 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
     setNextDueModalQuestId(questId);
   };
 
+  useEffect(() => {
+    if (questDueDateId === quest.id) {
+      clearQuestDueDateId();
+      openNextDueModal(quest.id);
+    }
+  }, [questDueDateId]);
+
+  const handleSkip = () => {
+    const result = skipQuest(quest.id);
+    if (result.needsNextDueDate) openNextDueModal(quest.id);
+  };
+
   const handleComplete = () => {
     if (isCompleted || !available || autoCompleteDisabled) return;
-    const result = completeQuest(quest.id);
-    const goldLine = result.goldAwarded > 0 ? `\n+${result.goldAwarded} Gold` : '';
-    const skillLine = result.skills.length ? `\nSkills: ${result.skills.join(', ')}` : '';
-    // Child takes priority; fall back to parent if only parent needs a due date
-    const dueDateTargetId = result.needsNextDueDate ? quest.id : (result.parentNeedsNextDueDate ?? null);
-    Alert.alert('Quest Complete!', `+${result.xpAwarded} XP${goldLine}${skillLine}`, [
-      {
-        text: 'OK',
-        onPress: dueDateTargetId ? () => openNextDueModal(dueDateTargetId) : undefined,
-      },
-    ]);
+    completeQuest(quest.id);
   };
 
   return (
@@ -152,6 +164,11 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
             </View>
           </View>
 
+          {/* Details */}
+          {!!quest.details && (
+            <Text style={styles.details}>{quest.details}</Text>
+          )}
+
           {/* Meta row */}
           <View style={styles.meta}>
             <View style={styles.metaGroup}>
@@ -160,7 +177,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
             </View>
             <View style={styles.metaGroup}>
               <Text style={styles.metaLabel}>Urgency</Text>
-              <DifficultyBadge value={quest.urgency} />
+              <DifficultyBadge value={quest.urgency} labelFn={getUrgencyLabel} />
             </View>
             {quest.repeatable && (
               <View style={styles.repeatBadge}>
@@ -169,7 +186,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
               </View>
             )}
             {!!quest.dueDate && !quest.completedAt && (() => {
-              const { text, status } = getDueInfo(quest.dueDate);
+              const { text, status } = getDueInfo(quest.dueDate, quest.dueTime ?? null);
               const color = DUE_COLORS[status];
               return (
                 <View style={[styles.dueBadge, { borderColor: color + '55', backgroundColor: color + '18' }]}>
@@ -203,7 +220,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                 <Text style={styles.rewardsLabel}>Rewards</Text>
                 <View style={styles.rewardsBadges}>
                   <View style={[styles.rewardBadge, styles.rewardXP]}>
-                    <Ionicons name="flash" size={10} color="#a855f7" />
+                    <Ionicons name="sparkles-sharp" size={10} color="#a855f7" />
                     <Text style={[styles.rewardText, { color: '#a855f7' }]}>+{xp} XP</Text>
                   </View>
                   {gold > 0 && (
@@ -285,7 +302,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
               {autoCompleteDisabled ? (
                 <Text style={styles.cooldownText}>Completes automatically when all sub-quests are done</Text>
               ) : (
-                <>
+                <View style={styles.completeBtnRow}>
                   <TouchableOpacity
                     style={[styles.completeBtn, !available && styles.completeBtnDisabled]}
                     onPress={handleComplete}
@@ -300,10 +317,16 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                       {quest.repeatable ? 'Complete Again' : 'Complete'}
                     </Text>
                   </TouchableOpacity>
+                  {quest.repeatable && !!quest.dueDate && (
+                    <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
+                      <Ionicons name="play-skip-forward-outline" size={16} color="#64748b" />
+                      <Text style={styles.skipBtnText}>Skip</Text>
+                    </TouchableOpacity>
+                  )}
                   {cooldownText && (
                     <Text style={styles.cooldownText}>{cooldownText}</Text>
                   )}
-                </>
+                </View>
               )}
             </>
           )}
@@ -471,6 +494,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 20,
   },
+  details: {
+    color: '#64748b',
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 6,
+  },
   childName: {
     fontSize: 14,
     fontWeight: '500',
@@ -623,6 +652,12 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: '#475569',
   },
+  completeBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
   completeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -634,6 +669,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ADFF2F33',
     backgroundColor: '#ADFF2F11',
+  },
+  skipBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#475569',
+    backgroundColor: 'transparent',
+  },
+  skipBtnText: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '600',
   },
   completeBtnText: {
     color: '#ADFF2F',

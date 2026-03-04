@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useEnergyDecay } from '../src/hooks/useEnergyDecay';
 import { useHydrationDecay } from '../src/hooks/useHydrationDecay';
 import { LevelUpModal } from '../src/components/shared/LevelUpModal';
+import { QuestCompleteModal } from '../src/components/shared/QuestCompleteModal';
 import { ClassPickerModal } from '../src/components/character/ClassPickerModal';
 import { useUIStore } from '../src/store/uiStore';
 import { useCharacterStore } from '../src/store/characterStore';
@@ -86,6 +87,7 @@ export default function RootLayout() {
           }}
         />
       </Stack>
+      <QuestCompleteModal />
       <LevelUpModal />
       <GlobalClassPicker />
       </SafeAreaProvider>

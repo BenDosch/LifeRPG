@@ -68,32 +68,24 @@ export default function StoreScreen() {
       {/* Content */}
       {activeTab === 'shop' ? (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-          {items.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="storefront-outline" size={40} color="#1e1e2e" />
-              <Text style={styles.emptyText}>No items in the shop yet.</Text>
-              <Text style={styles.emptySubText}>Tap "Add Item" to create one.</Text>
-            </View>
-          ) : (
-            <View style={styles.grid}>
-              <TouchableOpacity
-                style={styles.addCard}
-                onPress={() => router.push('/modals/shop-item-form')}
-              >
-                <Text style={styles.addCardPlus}>+</Text>
-                <Text style={styles.addCardLabel}>Add Item</Text>
-              </TouchableOpacity>
-              {items.map((item) => (
-                <ShopItemCard
-                  key={item.id}
-                  item={item}
-                  userGold={gold}
-                  onEdit={handleEdit}
-                  onBuy={handleBuy}
-                />
-              ))}
-            </View>
-          )}
+          <View style={styles.grid}>
+            <TouchableOpacity
+              style={styles.addCard}
+              onPress={() => router.push('/modals/shop-item-form')}
+            >
+              <Text style={styles.addCardPlus}>+</Text>
+              <Text style={styles.addCardLabel}>Add Item</Text>
+            </TouchableOpacity>
+            {items.map((item) => (
+              <ShopItemCard
+                key={item.id}
+                item={item}
+                userGold={gold}
+                onEdit={handleEdit}
+                onBuy={handleBuy}
+              />
+            ))}
+          </View>
         </ScrollView>
       ) : (
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>

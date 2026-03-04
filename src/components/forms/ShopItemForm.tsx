@@ -21,6 +21,7 @@ interface ShopItemFormProps {
 
 export function ShopItemForm({ editItem, onSave, onCancel }: ShopItemFormProps) {
   const [name, setName] = useState(editItem?.name ?? '');
+  const [description, setDescription] = useState(editItem?.description ?? '');
   const [cost, setCost] = useState(editItem?.cost ?? 0);
   const [unlimited, setUnlimited] = useState(editItem?.quantity === null);
   const [quantity, setQuantity] = useState(
@@ -41,6 +42,7 @@ export function ShopItemForm({ editItem, onSave, onCancel }: ShopItemFormProps) 
     if (!canSave) return;
     const input = {
       name: name.trim(),
+      description,
       cost,
       quantity: unlimited ? null : quantity,
       energyEffect,
@@ -69,6 +71,20 @@ export function ShopItemForm({ editItem, onSave, onCancel }: ShopItemFormProps) 
           placeholderTextColor="#334155"
           returnKeyType="done"
           autoFocus={!editItem}
+        />
+      </View>
+
+      {/* Description */}
+      <View style={styles.field}>
+        <Text style={styles.label}>Description</Text>
+        <TextInput
+          style={[styles.input, styles.descriptionInput]}
+          value={description}
+          onChangeText={setDescription}
+          placeholder="Optional description..."
+          placeholderTextColor="#334155"
+          multiline
+          blurOnSubmit
         />
       </View>
 
@@ -219,9 +235,10 @@ export function ShopItemForm({ editItem, onSave, onCancel }: ShopItemFormProps) 
       </View>
       <IconPickerModal
         visible={showIconPicker}
-        currentIcon={icon ?? undefined}
-        currentColor={iconColor ?? undefined}
-        onSelect={(selectedIcon, selectedColor) => {
+        skillName="Item Icon"
+        currentIcon={icon ?? null}
+        currentColor={iconColor ?? null}
+        onConfirm={(selectedIcon, selectedColor) => {
           setIcon(selectedIcon);
           setIconColor(selectedColor);
           setShowIconPicker(false);
@@ -252,6 +269,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: '#e2e8f0',
     fontSize: 15,
+  },
+  descriptionInput: {
+    minHeight: 72,
+    textAlignVertical: 'top',
+    fontSize: 13,
   },
   stepper: {
     flexDirection: 'row',

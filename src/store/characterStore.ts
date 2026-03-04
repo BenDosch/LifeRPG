@@ -61,7 +61,7 @@ export const useCharacterStore = create<CharacterState>()(
       setEnergyMinutesPerDay: (minutes) => set({ energyMinutesPerDay: Math.min(1440, Math.max(1, minutes)) }),
       addGold: (amount) => set((s) => ({ gold: s.gold + amount })),
       fullRest: () => set({ energy: 100, energyLastUpdated: new Date().toISOString() }),
-      gainHydration: (amount) => set((s) => ({ hydration: Math.min(100, s.hydration + amount) })),
+      gainHydration: (amount) => set((s) => ({ hydration: Math.min(120, s.hydration + amount) })),
       gainEnergy: (amount) => set((s) => ({ energy: Math.min(100, s.energy + amount) })),
       spendHydration: (amount) => set((s) => ({ hydration: Math.max(0, s.hydration - amount) })),
       spendEnergy: (amount) => set((s) => ({ energy: Math.max(0, s.energy - amount) })),
@@ -104,7 +104,7 @@ export const useCharacterStore = create<CharacterState>()(
         const { hydration, hydrationLastUpdated, dailyWaterServings } = get();
         const { hydration: current } = applyHydrationDecay(hydration, hydrationLastUpdated, now);
         const gain = 100 / dailyWaterServings;
-        set({ hydration: Math.min(100, current + gain), hydrationLastUpdated: now });
+        set({ hydration: Math.min(120, current + gain), hydrationLastUpdated: now });
       },
 
       applyHydrationDecay: (now = new Date().toISOString()) => {
@@ -137,11 +137,16 @@ export function useLevel() {
 
 export function useXpProgress() {
   return useCharacterStore(
-    useShallow((s) => ({
-      progress: s.points - (s.threshold - 100),
-      total: 100,
-      points: s.points,
-      threshold: s.threshold,
-    }))
+    useShallow((s) => {
+      const level = calcLevel(s.threshold);
+      const levelXpNeeded = (level + 1) * 100;
+      const levelXpStart = s.threshold - levelXpNeeded;
+      return {
+        progress: s.points - levelXpStart,
+        total: levelXpNeeded,
+        points: s.points,
+        threshold: s.threshold,
+      };
+    })
   );
 }

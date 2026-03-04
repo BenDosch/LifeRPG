@@ -7,6 +7,7 @@ import { useCharacterStore } from './characterStore';
 
 interface ShopItemInput {
   name: string;
+  description?: string;
   cost: number;
   quantity: number | null;
   energyEffect: number;
@@ -36,6 +37,7 @@ export const useShopStore = create<ShopState>()(
         const item: ShopItem = {
           id: uuidv4(),
           name: input.name,
+          description: input.description ?? '',
           cost: input.cost,
           quantity: input.quantity,
           energyEffect: input.energyEffect,
