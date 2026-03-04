@@ -231,7 +231,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                   )}
                   {eRew > 0 && (
                     <View style={[styles.rewardBadge, styles.rewardEnergy]}>
-                      <Ionicons name="battery-charging-outline" size={10} color="#4ade80" />
+                      <Ionicons name="flash" size={10} color="#4ade80" />
                       <Text style={[styles.rewardText, { color: '#4ade80' }]}>+{Math.round(eRew)}%</Text>
                     </View>
                   )}
@@ -253,7 +253,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
               <View style={styles.rewardsBadges}>
                 {(quest.energyCost ?? 0) > 0 && (
                   <View style={[styles.rewardBadge, styles.costEnergy]}>
-                    <Ionicons name="battery-charging-outline" size={10} color="#4ade80" />
+                    <Ionicons name="flash" size={10} color="#4ade80" />
                     <Text style={[styles.rewardText, { color: '#4ade80' }]}>-{Math.round(quest.energyCost)}%</Text>
                   </View>
                 )}

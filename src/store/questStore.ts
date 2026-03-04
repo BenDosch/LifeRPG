@@ -52,6 +52,8 @@ interface QuestState {
   setSkillIcon: (skillName: string, icon: string | null) => void;
   setSkillColor: (skillName: string, color: string | null) => void;
   addStandaloneSkill: (name: string) => void;
+  renameSkill: (oldName: string, newName: string) => void;
+  deleteSkill: (name: string) => void;
 
   // Selectors
   getQuest: (id: string) => Quest | undefined;
@@ -379,6 +381,52 @@ export const useQuestStore = create<QuestState>()(
         set((s) => {
           if (s.standaloneSkills.includes(trimmed)) return s;
           return { standaloneSkills: [...s.standaloneSkills, trimmed] };
+        });
+      },
+
+      renameSkill: (oldName, newName) => {
+        const trimmed = newName.trim();
+        if (!trimmed || trimmed === oldName) return;
+        set((state) => {
+          const standaloneSkills = state.standaloneSkills.map((n) => (n === oldName ? trimmed : n));
+          const skillIcons = { ...state.skillIcons };
+          if (oldName in skillIcons) { skillIcons[trimmed] = skillIcons[oldName]; delete skillIcons[oldName]; }
+          const skillColors = { ...state.skillColors };
+          if (oldName in skillColors) { skillColors[trimmed] = skillColors[oldName]; delete skillColors[oldName]; }
+          const quests = state.quests.map((q) => ({ ...q, skills: q.skills.map((n) => (n === oldName ? trimmed : n)) }));
+          const log = state.log.map((e) => ({ ...e, skills: e.skills.map((n) => (n === oldName ? trimmed : n)) }));
+          return { standaloneSkills, skillIcons, skillColors, quests, log };
+        });
+        const charState = useCharacterStore.getState();
+        useCharacterStore.setState({
+          customClasses: charState.customClasses.map((cls) => ({
+            ...cls,
+            requirements: cls.requirements.map((req) =>
+              req.type === 'skill' && req.skill === oldName ? { ...req, skill: trimmed } : req
+            ),
+          })),
+        });
+      },
+
+      deleteSkill: (name) => {
+        set((state) => {
+          const standaloneSkills = state.standaloneSkills.filter((n) => n !== name);
+          const skillIcons = { ...state.skillIcons };
+          delete skillIcons[name];
+          const skillColors = { ...state.skillColors };
+          delete skillColors[name];
+          const quests = state.quests.map((q) => ({ ...q, skills: q.skills.filter((n) => n !== name) }));
+          const log = state.log.map((e) => ({ ...e, skills: e.skills.filter((n) => n !== name) }));
+          return { standaloneSkills, skillIcons, skillColors, quests, log };
+        });
+        const charState = useCharacterStore.getState();
+        useCharacterStore.setState({
+          customClasses: charState.customClasses.map((cls) => ({
+            ...cls,
+            requirements: cls.requirements.filter(
+              (req) => !(req.type === 'skill' && req.skill === name)
+            ),
+          })),
         });
       },
 

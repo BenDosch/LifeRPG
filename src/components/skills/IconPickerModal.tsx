@@ -552,6 +552,8 @@ interface IconPickerModalProps {
   currentColor: string | null;
   onConfirm: (icon: string | null, color: string | null) => void;
   onClose: () => void;
+  onRename?: (newName: string) => void;
+  onDelete?: () => void;
 }
 
 export function IconPickerModal({
@@ -561,6 +563,8 @@ export function IconPickerModal({
   currentColor,
   onConfirm,
   onClose,
+  onRename,
+  onDelete,
 }: IconPickerModalProps) {
   const { width } = useWindowDimensions();
   const numColumns = Math.max(4, Math.floor(width / 72));
@@ -569,12 +573,17 @@ export function IconPickerModal({
   const [draftColor, setDraftColor] = useState<string>(currentColor ?? DEFAULT_SKILL_COLOR);
   const [search, setSearch] = useState('');
   const [variant, setVariant] = useState<IconVariant>('outline');
+  const [editingName, setEditingName] = useState(false);
+  const [draftName, setDraftName] = useState(skillName);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setDraftIcon(currentIcon);
       setDraftColor(currentColor ?? DEFAULT_SKILL_COLOR);
       setSearch('');
+      setEditingName(false);
+      setShowDeleteConfirm(false);
       const v: IconVariant = currentIcon?.endsWith('-outline')
         ? 'outline'
         : currentIcon?.endsWith('-sharp')
@@ -583,6 +592,12 @@ export function IconPickerModal({
       setVariant(v);
     }
   }, [visible, currentIcon, currentColor]);
+
+  // Sync draftName when skillName prop changes (e.g. after a successful rename)
+  useEffect(() => {
+    setDraftName(skillName);
+    setEditingName(false);
+  }, [skillName]);
 
   const handleVariantChange = (newVariant: IconVariant) => {
     setVariant(newVariant);
@@ -631,8 +646,48 @@ export function IconPickerModal({
           </View>
           <View style={styles.headerText}>
             <Text style={styles.headerLabel}>Customise skill</Text>
-            <Text style={styles.skillName}>{skillName}</Text>
+            {editingName ? (
+              <View style={styles.nameEditRow}>
+                <TextInput
+                  style={styles.nameInput}
+                  value={draftName}
+                  onChangeText={setDraftName}
+                  autoFocus
+                  returnKeyType="done"
+                  selectTextOnFocus
+                  onSubmitEditing={() => {
+                    if (draftName.trim() && draftName.trim() !== skillName) onRename?.(draftName.trim());
+                    setEditingName(false);
+                  }}
+                />
+                <TouchableOpacity
+                  onPress={() => {
+                    if (draftName.trim() && draftName.trim() !== skillName) onRename?.(draftName.trim());
+                    setEditingName(false);
+                  }}
+                >
+                  <Ionicons name="checkmark" size={18} color="#a855f7" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => { setDraftName(skillName); setEditingName(false); }}>
+                  <Ionicons name="close" size={18} color="#475569" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.nameRow}
+                onPress={() => onRename && setEditingName(true)}
+                disabled={!onRename}
+              >
+                <Text style={styles.skillName}>{skillName}</Text>
+                {onRename && <Ionicons name="pencil-outline" size={13} color="#475569" style={{ marginLeft: 5 }} />}
+              </TouchableOpacity>
+            )}
           </View>
+          {onDelete && (
+            <TouchableOpacity onPress={() => setShowDeleteConfirm(true)} style={styles.trashBtn}>
+              <Ionicons name="trash-outline" size={18} color="#ef4444" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Ionicons name="close" size={20} color="#475569" />
           </TouchableOpacity>
@@ -723,15 +778,31 @@ export function IconPickerModal({
         )}
 
         {/* Actions */}
-        <View style={styles.actions}>
-          {(currentIcon || currentColor) && (
-            <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
-              <Text style={styles.clearText}>Remove</Text>
-            </TouchableOpacity>
+        <View style={[styles.actions, showDeleteConfirm && { flexDirection: 'column' }]}>
+          {showDeleteConfirm ? (
+            <>
+              <Text style={styles.deleteConfirmText}>Delete "{skillName}"? This cannot be undone.</Text>
+              <View style={styles.deleteConfirmBtns}>
+                <TouchableOpacity style={styles.clearBtn} onPress={() => setShowDeleteConfirm(false)}>
+                  <Text style={styles.clearText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.deleteBtn} onPress={() => { onDelete?.(); onClose(); }}>
+                  <Text style={styles.deleteBtnText}>Delete Skill</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          ) : (
+            <>
+              {(currentIcon || currentColor) && (
+                <TouchableOpacity style={styles.clearBtn} onPress={handleClear}>
+                  <Text style={styles.clearText}>Remove</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={[styles.doneBtn, { backgroundColor: draftColor }]} onPress={handleDone}>
+                <Text style={styles.doneText}>Done</Text>
+              </TouchableOpacity>
+            </>
           )}
-          <TouchableOpacity style={[styles.doneBtn, { backgroundColor: draftColor }]} onPress={handleDone}>
-            <Text style={styles.doneText}>Done</Text>
-          </TouchableOpacity>
         </View>
 
       </View>
@@ -781,6 +852,31 @@ const styles = StyleSheet.create({
   headerLabel: { color: '#475569', fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   skillName: { color: '#e2e8f0', fontSize: 17, fontWeight: '700', marginTop: 1 },
   closeBtn: { padding: 4 },
+  trashBtn: { padding: 4, marginRight: 4 },
+  nameRow: { flexDirection: 'row', alignItems: 'center' },
+  nameEditRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  nameInput: {
+    flex: 1,
+    color: '#e2e8f0',
+    fontSize: 17,
+    fontWeight: '700',
+    borderBottomWidth: 1,
+    borderBottomColor: '#7c3aed',
+    paddingVertical: 2,
+    minWidth: 80,
+  },
+  deleteConfirmText: { color: '#ef444499', fontSize: 13, marginBottom: 2 },
+  deleteConfirmBtns: { flexDirection: 'row', gap: 10 },
+  deleteBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: '#ef444418',
+    borderWidth: 1,
+    borderColor: '#ef444440',
+    alignItems: 'center',
+  },
+  deleteBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '700' },
   sectionLabel: {
     color: '#475569',
     fontSize: 11,

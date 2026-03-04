@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Quest, RepeatSchedule, getTierLabel, getTierColor, getUrgencyLabel } from '../../types';
 import { IconPickerModal } from '../skills/IconPickerModal';
 import { calcXP } from '../../utils/xp';
-import { SliderInput } from '../shared/SliderInput';
+import { ArcSlider } from '../shared/ArcSlider';
 import { SelectPicker } from '../shared/SelectPicker';
 import { SkillInput } from './SkillInput';
 import { DateInput } from '../shared/DateInput';
@@ -255,25 +255,27 @@ export function QuestForm({
           blurOnSubmit
         />
 
-        {/* Difficulty */}
-        <View style={styles.sliderHeader}>
-          <Text style={styles.sectionLabel}>Difficulty</Text>
-          <View style={styles.sliderMeta}>
-            <Text style={[styles.tierLabel, { color: diffColor }]}>{getTierLabel(difficulty)}</Text>
-            <Text style={styles.sliderValue}>{difficulty}%</Text>
-          </View>
+        {/* Difficulty & Urgency */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 8 }}>
+          <ArcSlider
+            value={difficulty}
+            onValueChange={setDifficulty}
+            color={diffColor}
+            label="DIFFICULTY"
+            getLabel={getTierLabel}
+          />
+          <ArcSlider
+            value={urgency}
+            onValueChange={setUrgency}
+            color={impColor}
+            label="URGENCY"
+            getLabel={getUrgencyLabel}
+          />
         </View>
-        <SliderInput value={difficulty} onValueChange={setDifficulty} color={diffColor} />
-
-        {/* Urgency */}
-        <View style={styles.sliderHeader}>
-          <Text style={styles.sectionLabel}>Urgency</Text>
-          <View style={styles.sliderMeta}>
-            <Text style={[styles.tierLabel, { color: impColor }]}>{getUrgencyLabel(urgency)}</Text>
-            <Text style={styles.sliderValue}>{urgency}%</Text>
-          </View>
+        <View style={styles.xpRow}>
+          <Ionicons name="sparkles-sharp" size={13} color="#a855f7" />
+          <Text style={styles.xpRowText}>{xpPreview} XP</Text>
         </View>
-        <SliderInput value={urgency} onValueChange={setUrgency} color={impColor} />
 
         {/* Class Quest */}
         <View style={styles.switchRow}>
@@ -314,10 +316,6 @@ export function QuestForm({
         {/* Rewards */}
         <Text style={styles.sectionLabel}>Rewards</Text>
         <View style={styles.rewardRow}>
-          <View style={styles.xpPreview}>
-            <Ionicons name="sparkles-sharp" size={14} color="#a855f7" />
-            <Text style={styles.xpPreviewText}>{xpPreview} XP</Text>
-          </View>
           <View style={styles.goldInputRow}>
             <Ionicons name="logo-usd" size={14} color="#FFD700" />
             <TextInput
@@ -898,6 +896,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#0ea5e911',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  xpRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  xpRowText: {
+    color: '#a855f7',
+    fontSize: 13,
+    fontWeight: '700',
   },
   buttons: { flexDirection: 'row', gap: 12, marginTop: 20 },
   cancelBtn: {

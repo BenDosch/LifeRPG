@@ -47,7 +47,7 @@ export const useCharacterStore = create<CharacterState>()(
       energy: 100,
       energyLastUpdated: new Date().toISOString(),
       waterUnit: 'imperial' as const,
-      dailyWaterServings: 10,
+      dailyWaterServings: 8,
       energyDecayEnabled: true,
       energyMinutesPerDay: 960,
       customClasses: [],

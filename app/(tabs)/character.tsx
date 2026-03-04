@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useRouter } from 'expo-router';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,6 +19,7 @@ import { checkClassRequirements } from '../../src/utils/classRequirements';
 import { HERO_CLASSES } from '../../src/data/heroClasses';
 import { useShopStore } from '../../src/store/shopStore';
 import { ConfirmDialog } from '../../src/components/shared/ConfirmDialog';
+import { IconPickerModal } from '../../src/components/skills/IconPickerModal';
 import { getClassDef } from '../../src/data/heroClasses';
 import { getTier } from '../../src/types';
 import { useUIStore } from '../../src/store/uiStore';
@@ -53,17 +53,28 @@ export default function CharacterScreen() {
   const classColor = classDef?.color ?? '#a855f7';
   const level = useLevel();
   const { progress } = useXpProgress();
-  const log = useQuestStore(useShallow((s) => s.log));
-  const { skillIcons, skillColors, standaloneSkills } = useQuestStore(
-    useShallow((s) => ({ skillIcons: s.skillIcons, skillColors: s.skillColors, standaloneSkills: s.standaloneSkills }))
+  const { log, quests: allQuests } = useQuestStore(useShallow((s) => ({ log: s.log, quests: s.quests })));
+  const { skillIcons, skillColors, standaloneSkills, addStandaloneSkill, setSkillIcon, setSkillColor, renameSkill, deleteSkill } = useQuestStore(
+    useShallow((s) => ({
+      skillIcons: s.skillIcons,
+      skillColors: s.skillColors,
+      standaloneSkills: s.standaloneSkills,
+      addStandaloneSkill: s.addStandaloneSkill,
+      setSkillIcon: s.setSkillIcon,
+      setSkillColor: s.setSkillColor,
+      renameSkill: s.renameSkill,
+      deleteSkill: s.deleteSkill,
+    }))
   );
 
   const openClassPicker = useUIStore((s) => s.openClassPicker);
-  const router = useRouter();
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(name);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [pickerSkill, setPickerSkill] = useState<string | null>(null);
+  const [addingSkill, setAddingSkill] = useState(false);
+  const [newSkillName, setNewSkillName] = useState('');
 
   const totalXP = log.reduce((sum, e) => sum + e.xpAwarded, 0);
   const completedCount = log.length;
@@ -72,12 +83,40 @@ export default function CharacterScreen() {
 
   const allClasses = [...HERO_CLASSES, ...customClasses];
   const skillLevels = getSkillLevels(log);
-  const allSkills = Array.from(
-    new Set([...Object.keys(skillLevels), ...standaloneSkills])
-  ).sort((a, b) => {
-    const lvDiff = (skillLevels[b] ?? 0) - (skillLevels[a] ?? 0);
-    return lvDiff !== 0 ? lvDiff : a.localeCompare(b);
-  });
+
+  const skillStats = useMemo(() => {
+    const XP_PER_LEVEL = 100;
+    const map = new Map<string, { name: string; count: number; xp: number; level: number; progress: number }>();
+    for (const entry of log) {
+      for (const skill of entry.skills) {
+        const existing = map.get(skill);
+        if (existing) { existing.xp += entry.xpAwarded; }
+        else { map.set(skill, { name: skill, count: 0, xp: entry.xpAwarded, level: 0, progress: 0 }); }
+      }
+    }
+    for (const skill of standaloneSkills) {
+      if (!map.has(skill)) map.set(skill, { name: skill, count: 0, xp: 0, level: 0, progress: 0 });
+    }
+    // Count uncompleted quests per skill; also surfaces skills not yet in the log
+    for (const quest of allQuests) {
+      if (quest.completedAt !== null) continue;
+      for (const skill of quest.skills) {
+        const existing = map.get(skill);
+        if (existing) { existing.count++; }
+        else { map.set(skill, { name: skill, count: 1, xp: 0, level: 0, progress: 0 }); }
+      }
+    }
+    const result = Array.from(map.values());
+    for (const stat of result) { stat.level = Math.floor(stat.xp / XP_PER_LEVEL); stat.progress = stat.xp % XP_PER_LEVEL; }
+    return result.sort((a, b) => b.xp - a.xp);
+  }, [log, standaloneSkills, allQuests]);
+
+  const handleConfirmAddSkill = () => {
+    const trimmed = newSkillName.trim();
+    if (trimmed) addStandaloneSkill(trimmed);
+    setNewSkillName('');
+    setAddingSkill(false);
+  };
   const newlyUnlockableCount = allClasses.filter(
     (cls) =>
       cls.requirements.length > 0 &&
@@ -85,32 +124,7 @@ export default function CharacterScreen() {
       cls.name !== heroClass &&
       checkClassRequirements(cls, skillLevels, level, log)
   ).length;
-  const unlockedCount = allClasses.filter((c) =>
-    c.requirements.every((r) => {
-      switch (r.type) {
-        case 'skill': return (skillLevels[r.skill] ?? 0) >= r.level;
-        case 'playerLevel': return level >= r.level;
-        case 'classLevel': return getClassLevel(log, r.className) >= r.level;
-        case 'questsCompleted': {
-          const qualifying = log.filter(
-            (e) =>
-              (r.allowedDifficulties.length === 0 || r.allowedDifficulties.length === 4 || r.allowedDifficulties.includes(getTier(e.difficulty))) &&
-              (r.allowedUrgencies.length === 0 || r.allowedUrgencies.length === 4 || r.allowedUrgencies.includes(getTier(e.urgency)))
-          );
-          return qualifying.length >= r.count;
-        }
-        default: {
-          const legacy = r as any;
-          return legacy.skill ? (skillLevels[legacy.skill] ?? 0) >= (legacy.level ?? 1) : true;
-        }
-      }
-    })
-  ).length;
   const totalClassLevels = allClasses.reduce((sum, c) => sum + getClassLevel(log, c.name), 0);
-  const highestClass = allClasses.reduce<{ name: string; level: number } | null>((best, c) => {
-    const lv = getClassLevel(log, c.name);
-    return lv > (best?.level ?? -1) ? { name: c.name, level: lv } : best;
-  }, null);
   const totalSkillLevels = Object.values(skillLevels).reduce((sum, lv) => sum + lv, 0);
 
   const handleSaveName = () => {
@@ -227,44 +241,99 @@ export default function CharacterScreen() {
           </View>
 
           {/* Skills */}
-          {allSkills.length > 0 && (
-            <View style={[styles.field, { marginTop: 24 }]}>
-              <View style={styles.fieldLabelRow}>
-                <Text style={styles.fieldLabel}>Skills</Text>
-                <TouchableOpacity style={styles.manageClassesBtn} onPress={() => router.push('/skills')}>
-                  <Ionicons name="hammer" size={12} color="#475569" />
-                  <Text style={styles.manageClassesText}>Manage skills</Text>
+          <View style={[styles.field, { marginTop: 24 }]}>
+            <View style={styles.fieldLabelRow}>
+              <Text style={styles.fieldLabel}>Skills</Text>
+              <TouchableOpacity
+                style={styles.manageClassesBtn}
+                onPress={() => setAddingSkill((v) => !v)}
+              >
+                <Ionicons name={addingSkill ? 'close' : 'add'} size={12} color={addingSkill ? '#a855f7' : '#475569'} />
+                <Text style={[styles.manageClassesText, addingSkill && { color: '#a855f7' }]}>
+                  {addingSkill ? 'Cancel' : 'New Skill'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {addingSkill && (
+              <View style={styles.skillAddRow}>
+                <TextInput
+                  style={styles.skillAddInput}
+                  value={newSkillName}
+                  onChangeText={setNewSkillName}
+                  placeholder="Skill name..."
+                  placeholderTextColor="#475569"
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={handleConfirmAddSkill}
+                />
+                <TouchableOpacity
+                  style={[styles.skillAddConfirmBtn, !newSkillName.trim() && styles.skillAddConfirmBtnDisabled]}
+                  onPress={handleConfirmAddSkill}
+                  disabled={!newSkillName.trim()}
+                >
+                  <Ionicons name="checkmark" size={16} color={newSkillName.trim() ? '#a855f7' : '#334155'} />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.skillAddCancelBtn}
+                  onPress={() => { setNewSkillName(''); setAddingSkill(false); }}
+                >
+                  <Ionicons name="close" size={16} color="#475569" />
                 </TouchableOpacity>
               </View>
-              <View style={styles.unlockedBadgeRow}>
-                {allSkills.map((skill) => {
-                  const lv = skillLevels[skill] ?? 0;
-                  const color = skillColors[skill] ?? '#a855f7';
-                  const icon = skillIcons[skill];
-                  return (
-                    <View
-                      key={skill}
-                      style={[styles.unlockedBadge, { borderColor: color + '44', backgroundColor: color + '11' }]}
+            )}
+
+            {skillStats.length === 0 && !addingSkill && (
+              <Text style={styles.skillEmptyText}>No skills yet — complete quests with skills or add one</Text>
+            )}
+
+            {skillStats.map((stat, index) => {
+              const color = skillColors[stat.name] ?? '#a855f7';
+              const icon = skillIcons[stat.name] as keyof typeof Ionicons.glyphMap | undefined;
+              return (
+                <View key={stat.name}>
+                  {index > 0 && <View style={styles.skillSeparator} />}
+                  <View style={styles.skillRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.skillBadge,
+                        icon
+                          ? { borderColor: color + '66', backgroundColor: color + '22' }
+                          : { borderColor: '#1e1e2e', backgroundColor: '#0d0d14' },
+                      ]}
+                      onPress={() => setPickerSkill(stat.name)}
                     >
-                      {icon && <Ionicons name={icon as any} size={13} color={color} />}
-                      <Text style={[styles.unlockedBadgeText, { color }]}>{skill}</Text>
-                      <Text style={[styles.unlockedBadgeLv, { color: color + 'bb' }]}>Lv {lv}</Text>
+                      {icon
+                        ? <Ionicons name={icon} size={22} color={color} />
+                        : <Ionicons name="add" size={18} color="#334155" />
+                      }
+                      <Text style={[styles.skillLevel, icon && { color: color + 'cc' }]}>{stat.level}</Text>
+                    </TouchableOpacity>
+                    <View style={styles.skillInfo}>
+                      <View style={styles.skillNameRow}>
+                        <Text style={styles.skillName}>{stat.name}</Text>
+                        <Text style={[styles.skillXp, { color }]}>{stat.xp} XP</Text>
+                      </View>
+                      <View style={styles.skillBarTrack}>
+                        <View style={[styles.skillBarFill, { width: `${stat.progress}%` as any, backgroundColor: color }]} />
+                      </View>
+                      <Text style={styles.skillProgressLabel}>
+                        {stat.progress} / 100 to next level · {stat.count} active quest{stat.count !== 1 ? 's' : ''}
+                      </Text>
                     </View>
-                  );
-                })}
-              </View>
-            </View>
-          )}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
 
         </View>
 
         {/* Stats */}
         <Text style={styles.sectionHeading}>Statistics</Text>
         <View style={styles.statsGrid}>
-          <StatCard label="Total Player XP" value={String(totalXP)} icon="flash" color="#7c3aed" />
+          <StatCard label="Total Player XP" value={String(totalXP)} icon="sparkles-sharp" color="#7c3aed" />
           <StatCard label="Completed Quests" value={String(completedCount)} icon="checkmark-circle" color="#ADFF2F" />
-          <StatCard label="Classes Unlocked" value={String(unlockedCount)} icon="shield-checkmark" color="#a855f7" />
-          <StatCard label="Highest Level Class" value={highestClass ? `Lv ${highestClass.level} ${highestClass.name}` : '—'} icon="trophy" color="#FFD700" />
           <StatCard label="Total Class Levels" value={String(totalClassLevels)} icon="star" color="#f59e0b" />
           <StatCard label="Total Skill Levels" value={String(totalSkillLevels)} icon="barbell" color="#22c55e" />
         </View>
@@ -398,6 +467,19 @@ export default function CharacterScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {pickerSkill && (
+        <IconPickerModal
+          visible
+          skillName={pickerSkill}
+          currentIcon={skillIcons[pickerSkill] ?? null}
+          currentColor={skillColors[pickerSkill] ?? null}
+          onConfirm={(icon, color) => { setSkillIcon(pickerSkill, icon); setSkillColor(pickerSkill, color); }}
+          onClose={() => setPickerSkill(null)}
+          onRename={(newName) => { renameSkill(pickerSkill, newName); setPickerSkill(newName); }}
+          onDelete={() => { deleteSkill(pickerSkill); setPickerSkill(null); }}
+        />
+      )}
 
       <ConfirmDialog
         visible={showResetConfirm}
@@ -684,6 +766,94 @@ const styles = StyleSheet.create({
   disabledRow: {
     opacity: 0.35,
   },
+  skillAddRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 6,
+  },
+  skillAddInput: {
+    flex: 1,
+    backgroundColor: '#0a0a0f',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#7c3aed',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#e2e8f0',
+    fontSize: 14,
+  },
+  skillAddConfirmBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#7c3aed44',
+    backgroundColor: '#7c3aed18',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skillAddConfirmBtnDisabled: {
+    borderColor: '#1e1e2e',
+    backgroundColor: 'transparent',
+  },
+  skillAddCancelBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#1e1e2e',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skillEmptyText: {
+    color: '#334155',
+    fontSize: 12,
+    marginTop: 8,
+  },
+  skillSeparator: {
+    height: 1,
+    backgroundColor: '#1e1e2e',
+  },
+  skillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    gap: 12,
+  },
+  skillBadge: {
+    width: 48,
+    height: 52,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  skillLevel: {
+    color: '#475569',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  skillInfo: { flex: 1, gap: 4 },
+  skillNameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+  },
+  skillName: { color: '#e2e8f0', fontSize: 15, fontWeight: '600' },
+  skillXp: { fontSize: 12, fontWeight: '700' },
+  skillBarTrack: {
+    height: 6,
+    backgroundColor: '#1e1e2e',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  skillBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  skillProgressLabel: { color: '#475569', fontSize: 11 },
   dangerBtn: {
     flexDirection: 'row',
     alignItems: 'center',

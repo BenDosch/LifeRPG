@@ -16,8 +16,8 @@ interface SkillStat {
 const XP_PER_LEVEL = 100;
 
 export function SkillList() {
-  const log = useQuestStore((s) => s.log);
-  const { skillIcons, skillColors, standaloneSkills, setSkillIcon, setSkillColor, addStandaloneSkill } = useQuestStore(
+  const { log, quests } = useQuestStore(useShallow((s) => ({ log: s.log, quests: s.quests })));
+  const { skillIcons, skillColors, standaloneSkills, setSkillIcon, setSkillColor, addStandaloneSkill, renameSkill, deleteSkill } = useQuestStore(
     useShallow((s) => ({
       skillIcons: s.skillIcons,
       skillColors: s.skillColors,
@@ -25,6 +25,8 @@ export function SkillList() {
       setSkillIcon: s.setSkillIcon,
       setSkillColor: s.setSkillColor,
       addStandaloneSkill: s.addStandaloneSkill,
+      renameSkill: s.renameSkill,
+      deleteSkill: s.deleteSkill,
     }))
   );
   const [pickerSkill, setPickerSkill] = useState<string | null>(null);
@@ -37,10 +39,9 @@ export function SkillList() {
       for (const skill of entry.skills) {
         const existing = map.get(skill);
         if (existing) {
-          existing.count += 1;
           existing.xp += entry.xpAwarded;
         } else {
-          map.set(skill, { name: skill, count: 1, xp: entry.xpAwarded, level: 0, progress: 0 });
+          map.set(skill, { name: skill, count: 0, xp: entry.xpAwarded, level: 0, progress: 0 });
         }
       }
     }
@@ -50,13 +51,22 @@ export function SkillList() {
         map.set(skill, { name: skill, count: 0, xp: 0, level: 0, progress: 0 });
       }
     }
+    // Count uncompleted quests per skill; also surfaces skills not yet in the log
+    for (const quest of quests) {
+      if (quest.completedAt !== null) continue;
+      for (const skill of quest.skills) {
+        const existing = map.get(skill);
+        if (existing) { existing.count++; }
+        else { map.set(skill, { name: skill, count: 1, xp: 0, level: 0, progress: 0 }); }
+      }
+    }
     const result = Array.from(map.values());
     for (const stat of result) {
       stat.level = Math.floor(stat.xp / XP_PER_LEVEL);
       stat.progress = stat.xp % XP_PER_LEVEL;
     }
     return result.sort((a, b) => b.xp - a.xp);
-  }, [log, standaloneSkills]);
+  }, [log, standaloneSkills, quests]);
 
   const handleConfirmAdd = () => {
     const trimmed = newSkillName.trim();
@@ -152,6 +162,8 @@ export function SkillList() {
             setSkillColor(pickerSkill, color);
           }}
           onClose={() => setPickerSkill(null)}
+          onRename={(newName) => { renameSkill(pickerSkill, newName); setPickerSkill(newName); }}
+          onDelete={() => { deleteSkill(pickerSkill); setPickerSkill(null); }}
         />
       )}
     </>
@@ -206,7 +218,7 @@ function SkillRow({
           <View style={[styles.barFill, { width: `${progressPct * 100}%` as any, backgroundColor: activeColor }]} />
         </View>
         <Text style={styles.progressLabel}>
-          {item.progress} / {XP_PER_LEVEL} to next level · {item.count} quest{item.count !== 1 ? 's' : ''}
+          {item.progress} / {XP_PER_LEVEL} to next level · {item.count} active quest{item.count !== 1 ? 's' : ''}
         </Text>
       </View>
     </View>
