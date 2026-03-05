@@ -334,7 +334,6 @@ export function ClassPickerModal({
             ) : (
               customClasses.map((c) => renderClassCard(c, true))
             )}
-
             {/* Predefined classes */}
             <Text style={[styles.sectionLabel, { marginTop: 8 }]}>Predefined Classes</Text>
             {HERO_CLASSES.map((c) => renderClassCard(c, false))}

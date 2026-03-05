@@ -7,7 +7,7 @@ import { useCharacterStore } from './characterStore';
 import { useUIStore, LevelUpEntry, QuestCompleteEvent } from './uiStore';
 import { calcLevel, calcXP } from '../utils/xp';
 import { getSkillLevels, getClassLevels } from '../utils/skillLevels';
-import { HERO_CLASSES, getClassDef } from '../data/heroClasses';
+import { HERO_CLASSES, getClassDef, DEFAULT_SKILLS } from '../data/heroClasses';
 import { checkClassRequirements } from '../utils/classRequirements';
 import { isQuestAvailable } from '../utils/repeat';
 import { advanceDueDate } from '../utils/dueDate';
@@ -41,6 +41,9 @@ interface QuestState {
   skillIcons: Record<string, string>;
   skillColors: Record<string, string>;
   standaloneSkills: string[];
+  skillGroups: Record<string, string[]>;
+  groupIcons: Record<string, string>;
+  groupColors: Record<string, string>;
 
   addQuest: (input: QuestInput) => Quest;
   updateQuest: (id: string, input: Partial<QuestInput>) => void;
@@ -54,6 +57,13 @@ interface QuestState {
   addStandaloneSkill: (name: string) => void;
   renameSkill: (oldName: string, newName: string) => void;
   deleteSkill: (name: string) => void;
+  addSkillGroup: (name: string) => void;
+  deleteSkillGroup: (name: string) => void;
+  renameSkillGroup: (oldName: string, newName: string) => void;
+  setGroupIcon: (groupName: string, icon: string | null) => void;
+  setGroupColor: (groupName: string, color: string | null) => void;
+  addSkillToGroup: (groupName: string, skillName: string) => void;
+  removeSkillFromGroup: (groupName: string, skillName: string) => void;
 
   // Selectors
   getQuest: (id: string) => Quest | undefined;
@@ -69,7 +79,14 @@ export const useQuestStore = create<QuestState>()(
       log: [],
       skillIcons: {},
       skillColors: {},
-      standaloneSkills: [],
+      standaloneSkills: DEFAULT_SKILLS,
+      groupIcons: {},
+      groupColors: {},
+      skillGroups: {
+        Mental: ['Critical Thinking', 'Discipline', 'Focus', 'Logic', 'Mathematics', 'Memory', 'Philosophy', 'Reading', 'Research', 'Study', 'Writing'],
+        Physical: ['Agility', 'Balance', 'Core Strength', 'Endurance', 'Flexibility', 'Meditation', 'Nutrition', 'Strength Training'],
+        Social: ['Finance', 'Negotiation', 'Networking', 'Persuasion'],
+      },
 
       addQuest: (input) => {
         const quest: Quest = {
@@ -395,7 +412,11 @@ export const useQuestStore = create<QuestState>()(
           if (oldName in skillColors) { skillColors[trimmed] = skillColors[oldName]; delete skillColors[oldName]; }
           const quests = state.quests.map((q) => ({ ...q, skills: q.skills.map((n) => (n === oldName ? trimmed : n)) }));
           const log = state.log.map((e) => ({ ...e, skills: e.skills.map((n) => (n === oldName ? trimmed : n)) }));
-          return { standaloneSkills, skillIcons, skillColors, quests, log };
+          const skillGroups: Record<string, string[]> = {};
+          for (const [group, skills] of Object.entries(state.skillGroups)) {
+            skillGroups[group] = skills.map((n) => (n === oldName ? trimmed : n));
+          }
+          return { standaloneSkills, skillIcons, skillColors, quests, log, skillGroups };
         });
         const charState = useCharacterStore.getState();
         useCharacterStore.setState({
@@ -417,7 +438,11 @@ export const useQuestStore = create<QuestState>()(
           delete skillColors[name];
           const quests = state.quests.map((q) => ({ ...q, skills: q.skills.filter((n) => n !== name) }));
           const log = state.log.map((e) => ({ ...e, skills: e.skills.filter((n) => n !== name) }));
-          return { standaloneSkills, skillIcons, skillColors, quests, log };
+          const skillGroups: Record<string, string[]> = {};
+          for (const [group, skills] of Object.entries(state.skillGroups)) {
+            skillGroups[group] = skills.filter((n) => n !== name);
+          }
+          return { standaloneSkills, skillIcons, skillColors, quests, log, skillGroups };
         });
         const charState = useCharacterStore.getState();
         useCharacterStore.setState({
@@ -427,6 +452,77 @@ export const useQuestStore = create<QuestState>()(
               (req) => !(req.type === 'skill' && req.skill === name)
             ),
           })),
+        });
+      },
+
+      addSkillGroup: (name) => {
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        set((s) => {
+          if (trimmed in s.skillGroups) return s;
+          return { skillGroups: { ...s.skillGroups, [trimmed]: [] } };
+        });
+      },
+
+      deleteSkillGroup: (name) => {
+        set((s) => {
+          const { [name]: _, ...rest } = s.skillGroups;
+          const groupIcons = { ...s.groupIcons }; delete groupIcons[name];
+          const groupColors = { ...s.groupColors }; delete groupColors[name];
+          return { skillGroups: rest, groupIcons, groupColors };
+        });
+      },
+
+      renameSkillGroup: (oldName, newName) => {
+        const trimmed = newName.trim();
+        if (!trimmed || trimmed === oldName) return;
+        set((s) => {
+          if (!(oldName in s.skillGroups) || trimmed in s.skillGroups) return s;
+          const { [oldName]: skills, ...restGroups } = s.skillGroups;
+          const groupIcons = { ...s.groupIcons };
+          if (oldName in groupIcons) { groupIcons[trimmed] = groupIcons[oldName]; delete groupIcons[oldName]; }
+          const groupColors = { ...s.groupColors };
+          if (oldName in groupColors) { groupColors[trimmed] = groupColors[oldName]; delete groupColors[oldName]; }
+          return { skillGroups: { ...restGroups, [trimmed]: skills }, groupIcons, groupColors };
+        });
+      },
+
+      setGroupIcon: (groupName, icon) => {
+        set((s) => {
+          const groupIcons = { ...s.groupIcons };
+          if (icon === null) { delete groupIcons[groupName]; } else { groupIcons[groupName] = icon; }
+          return { groupIcons };
+        });
+      },
+
+      setGroupColor: (groupName, color) => {
+        set((s) => {
+          const groupColors = { ...s.groupColors };
+          if (color === null) { delete groupColors[groupName]; } else { groupColors[groupName] = color; }
+          return { groupColors };
+        });
+      },
+
+      addSkillToGroup: (groupName, skillName) => {
+        set((s) => {
+          const existing = s.skillGroups[groupName];
+          if (!existing || existing.includes(skillName)) return s;
+          // Remove from any other group first
+          const skillGroups: Record<string, string[]> = {};
+          for (const [g, skills] of Object.entries(s.skillGroups)) {
+            skillGroups[g] = g === groupName
+              ? [...skills, skillName]
+              : skills.filter((n) => n !== skillName);
+          }
+          return { skillGroups };
+        });
+      },
+
+      removeSkillFromGroup: (groupName, skillName) => {
+        set((s) => {
+          const existing = s.skillGroups[groupName];
+          if (!existing) return s;
+          return { skillGroups: { ...s.skillGroups, [groupName]: existing.filter((n) => n !== skillName) } };
         });
       },
 
