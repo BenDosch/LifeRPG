@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,8 @@ import { useQuestStore } from '../../store/questStore';
 import { useCharacterStore } from '../../store/characterStore';
 import { HERO_CLASSES } from '../../data/heroClasses';
 import { Tooltip } from '../shared/Tooltip';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface QuestFormProps {
   editQuest?: Quest | null;
@@ -36,6 +38,9 @@ export function QuestForm({
   onSave,
   onCancel,
 }: QuestFormProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const [name, setName] = useState('');
   const [details, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState(50);
@@ -207,7 +212,7 @@ export function QuestForm({
           value={name}
           onChangeText={setName}
           placeholder="Enter quest name..."
-          placeholderTextColor="#475569"
+          placeholderTextColor={theme.textDisabled}
           autoFocus
           returnKeyType="done"
           onSubmitEditing={handleSave}
@@ -234,12 +239,12 @@ export function QuestForm({
           ) : (
             <>
               <View style={styles.iconPickerPreviewEmpty}>
-                <Ionicons name="image-outline" size={22} color="#334155" />
+                <Ionicons name="image-outline" size={22} color={theme.textTertiary} />
               </View>
               <Text style={styles.iconPickerLabelEmpty}>No icon — tap to set</Text>
             </>
           )}
-          <Ionicons name="chevron-forward" size={16} color="#475569" />
+          <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
         </TouchableOpacity>
 
         {/* Details */}
@@ -249,7 +254,7 @@ export function QuestForm({
           value={details}
           onChangeText={setDescription}
           placeholder="Optional details..."
-          placeholderTextColor="#475569"
+          placeholderTextColor={theme.textDisabled}
           multiline
           returnKeyType="done"
           blurOnSubmit
@@ -289,8 +294,8 @@ export function QuestForm({
               setClassQuestEnabled(v);
               if (!v) setClassQuest(null);
             }}
-            trackColor={{ true: '#7c3aed' }}
-            thumbColor="#fff"
+            trackColor={{ false: theme.borderMuted, true: '#4ade8066' }}
+            thumbColor={classQuestEnabled ? '#4ade80' : '#fff'}
           />
         </View>
         {classQuestEnabled && (
@@ -304,7 +309,7 @@ export function QuestForm({
                 ]}
                 onPress={() => setClassQuest(cls.name)}
               >
-                <Ionicons name={cls.icon as any} size={13} color={classQuest === cls.name ? cls.color : '#64748b'} />
+                <Ionicons name={cls.icon as any} size={13} color={classQuest === cls.name ? cls.color : theme.textMuted} />
                 <Text style={[styles.classChipText, classQuest === cls.name && { color: cls.color, fontWeight: '600' }]}>
                   {cls.name}
                 </Text>
@@ -326,13 +331,13 @@ export function QuestForm({
                 setGoldReward(isNaN(n) || n < 0 ? 0 : n);
               }}
               placeholder="0"
-              placeholderTextColor="#475569"
+              placeholderTextColor={theme.textDisabled}
               keyboardType="number-pad"
             />
             <Text style={styles.goldLabel}>Gold</Text>
           </View>
           <View style={[styles.costInputRow, hydrationCost > 0 && styles.inputDisabled]}>
-            <Ionicons name="water" size={14} color={hydrationCost > 0 ? '#334155' : '#0ea5e9'} />
+            <Ionicons name="water" size={14} color={hydrationCost > 0 ? theme.textTertiary : '#0ea5e9'} />
             <TextInput
               style={[styles.costInput, hydrationCost > 0 && styles.inputTextDisabled]}
               value={hydrationReward === 0 ? '' : String(hydrationReward)}
@@ -341,14 +346,14 @@ export function QuestForm({
                 setHydrationReward(isNaN(n) || n < 0 ? 0 : Math.min(100, n));
               }}
               placeholder="0"
-              placeholderTextColor="#475569"
+              placeholderTextColor={theme.textDisabled}
               keyboardType="number-pad"
               editable={hydrationCost === 0}
             />
             <Text style={[styles.costLabelBlue, hydrationCost > 0 && styles.inputTextDisabled]}>Hydration</Text>
           </View>
           <View style={[styles.costInputRow, styles.costInputRowAmber, energyCost > 0 && styles.inputDisabled]}>
-            <Ionicons name="flash" size={14} color={energyCost > 0 ? '#334155' : '#4ade80'} />
+            <Ionicons name="flash" size={14} color={energyCost > 0 ? theme.textTertiary : '#4ade80'} />
             <TextInput
               style={[styles.costInput, styles.costInputAmber, energyCost > 0 && styles.inputTextDisabled]}
               value={energyReward === 0 ? '' : String(energyReward)}
@@ -357,7 +362,7 @@ export function QuestForm({
                 setEnergyReward(isNaN(n) || n < 0 ? 0 : Math.min(100, n));
               }}
               placeholder="0"
-              placeholderTextColor="#475569"
+              placeholderTextColor={theme.textDisabled}
               keyboardType="number-pad"
               editable={energyCost === 0}
             />
@@ -369,7 +374,7 @@ export function QuestForm({
         <Text style={styles.sectionLabel}>Costs</Text>
         <View style={styles.rewardRow}>
           <View style={[styles.costInputRow, hydrationReward > 0 && styles.inputDisabled]}>
-            <Ionicons name="water" size={14} color={hydrationReward > 0 ? '#334155' : '#0ea5e9'} />
+            <Ionicons name="water" size={14} color={hydrationReward > 0 ? theme.textTertiary : '#0ea5e9'} />
             <TextInput
               style={[styles.costInput, hydrationReward > 0 && styles.inputTextDisabled]}
               value={hydrationCost === 0 ? '' : String(hydrationCost)}
@@ -378,14 +383,14 @@ export function QuestForm({
                 setHydrationCost(isNaN(n) || n < 0 ? 0 : Math.min(100, n));
               }}
               placeholder="0"
-              placeholderTextColor="#475569"
+              placeholderTextColor={theme.textDisabled}
               keyboardType="number-pad"
               editable={hydrationReward === 0}
             />
             <Text style={[styles.costLabelBlue, hydrationReward > 0 && styles.inputTextDisabled]}>Hydration</Text>
           </View>
           <View style={[styles.costInputRow, styles.costInputRowAmber, energyReward > 0 && styles.inputDisabled]}>
-            <Ionicons name="flash" size={14} color={energyReward > 0 ? '#334155' : '#4ade80'} />
+            <Ionicons name="flash" size={14} color={energyReward > 0 ? theme.textTertiary : '#4ade80'} />
             <TextInput
               style={[styles.costInput, styles.costInputAmber, energyReward > 0 && styles.inputTextDisabled]}
               value={energyCost === 0 ? '' : String(energyCost)}
@@ -394,7 +399,7 @@ export function QuestForm({
                 setEnergyCost(isNaN(n) || n < 0 ? 0 : Math.min(100, n));
               }}
               placeholder="0"
-              placeholderTextColor="#475569"
+              placeholderTextColor={theme.textDisabled}
               keyboardType="number-pad"
               editable={energyReward === 0}
             />
@@ -426,8 +431,8 @@ export function QuestForm({
                 setDueDate(null);
               }
             }}
-            trackColor={{ true: '#7c3aed' }}
-            thumbColor="#fff"
+            trackColor={{ false: theme.borderMuted, true: '#4ade8066' }}
+            thumbColor={repeatable ? '#4ade80' : '#fff'}
           />
         </View>
 
@@ -435,13 +440,15 @@ export function QuestForm({
         {!repeatable && (
           <>
             <Text style={styles.sectionLabel}>Due Date</Text>
-            <DateInput
-              value={dueDate}
-              onChange={(v) => { setDueDate(v); if (!v) setDueTime(null); }}
-            />
-            {dueDate && (
-              <TimeInput value={dueTime} onChange={setDueTime} />
-            )}
+            <View style={styles.dateTimeRow}>
+              <DateInput
+                value={dueDate}
+                onChange={(v) => { setDueDate(v); if (!v) setDueTime(null); }}
+              />
+              {dueDate && (
+                <TimeInput value={dueTime} onChange={setDueTime} />
+              )}
+            </View>
           </>
         )}
 
@@ -563,13 +570,15 @@ export function QuestForm({
             {dueDateScheduleEnabled && (
               <>
                 <Text style={styles.sectionLabel}>Starting</Text>
-                <DateInput
-                  value={dueDate}
-                  onChange={(v) => { setDueDate(v); if (!v) setDueTime(null); }}
-                />
-                {dueDate && (
-                  <TimeInput value={dueTime} onChange={setDueTime} />
-                )}
+                <View style={styles.dateTimeRow}>
+                  <DateInput
+                    value={dueDate}
+                    onChange={(v) => { setDueDate(v); if (!v) setDueTime(null); }}
+                  />
+                  {dueDate && (
+                    <TimeInput value={dueTime} onChange={setDueTime} />
+                  )}
+                </View>
               </>
             )}
           </>
@@ -585,8 +594,8 @@ export function QuestForm({
               <Switch
                 value={autoCompleteOnSubQuests}
                 onValueChange={setAutoCompleteOnSubQuests}
-                trackColor={{ true: '#7c3aed' }}
-                thumbColor="#fff"
+                trackColor={{ false: theme.borderMuted, true: '#4ade8066' }}
+                thumbColor={autoCompleteOnSubQuests ? '#4ade80' : '#fff'}
               />
             </View>
 
@@ -620,8 +629,8 @@ export function QuestForm({
                   setHasParent(v);
                   if (v && rootQuests.length > 0) { setParentId(rootQuests[0].id); } else { setParentId(null); }
                 }}
-                trackColor={{ true: '#7c3aed' }}
-                thumbColor="#fff"
+                trackColor={{ false: theme.borderMuted, true: '#4ade8066' }}
+                thumbColor={hasParent ? '#4ade80' : '#fff'}
               />
             </View>
             {hasParent && parentOptions.length > 0 && (
@@ -641,8 +650,8 @@ export function QuestForm({
                   <Switch
                     value={parentAutoComplete}
                     onValueChange={setParentAutoComplete}
-                    trackColor={{ true: '#7c3aed' }}
-                    thumbColor="#fff"
+                    trackColor={{ false: theme.borderMuted, true: '#4ade8066' }}
+                    thumbColor={parentAutoComplete ? '#4ade80' : '#fff'}
                   />
                 </View>
               </>
@@ -678,338 +687,341 @@ export function QuestForm({
   );
 }
 
-const styles = StyleSheet.create({
-  scroll: { flex: 1 },
-  container: { padding: 20, gap: 8 },
-  sectionLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginTop: 8,
-  },
-  textInput: {
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: '#e2e8f0',
-    fontSize: 15,
-  },
-  detailsInput: {
-    minHeight: 72,
-    textAlignVertical: 'top',
-    fontSize: 13,
-  },
-  sliderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginTop: 8,
-  },
-  sliderMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  tierLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  sliderValue: {
-    color: '#475569',
-    fontSize: 12,
-  },
-  rewardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  xpPreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#7c3aed22',
-    borderWidth: 1,
-    borderColor: '#7c3aed44',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  xpPreviewText: {
-    color: '#a855f7',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  goldInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#FFD70011',
-    borderWidth: 1,
-    borderColor: '#FFD70033',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  goldInput: {
-    color: '#FFD700',
-    fontSize: 13,
-    fontWeight: '700',
-    minWidth: 28,
-    textAlign: 'center',
-  },
-  goldLabel: {
-    color: '#FFD700',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  costInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#0ea5e911',
-    borderWidth: 1,
-    borderColor: '#0ea5e933',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  costInput: {
-    color: '#0ea5e9',
-    fontSize: 13,
-    fontWeight: '700',
-    minWidth: 28,
-    textAlign: 'center',
-  },
-  costInputAmber: {
-    color: '#4ade80',
-  },
-  costInputRowAmber: {
-    backgroundColor: '#4ade8011',
-    borderColor: '#4ade8033',
-  },
-  inputDisabled: {
-    opacity: 0.35,
-  },
-  inputTextDisabled: {
-    color: '#475569',
-  },
-  costLabelBlue: {
-    color: '#0ea5e9',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  costLabelAmber: {
-    color: '#4ade80',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  picker: {
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    overflow: 'hidden',
-  },
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  switchHint: {
-    color: '#334155',
-    fontSize: 11,
-    marginTop: 2,
-  },
-  scheduleTypeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  scheduleChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    backgroundColor: '#0a0a0f',
-  },
-  scheduleChipActive: {
-    borderColor: '#7c3aed',
-    backgroundColor: '#7c3aed22',
-  },
-  scheduleChipText: { color: '#64748b', fontSize: 13 },
-  scheduleChipTextActive: { color: '#a855f7', fontWeight: '600' },
-  everyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 4,
-  },
-  everyLabel: { color: '#64748b', fontSize: 14 },
-  stepBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#7c3aed44',
-    backgroundColor: '#7c3aed11',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  everyValue: {
-    color: '#e2e8f0',
-    fontSize: 18,
-    fontWeight: '700',
-    minWidth: 28,
-    textAlign: 'center',
-  },
-  weekdayRow: { flexDirection: 'row', gap: 6 },
-  dayChip: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    backgroundColor: '#0a0a0f',
-    alignItems: 'center',
-  },
-  dayChipActive: { borderColor: '#7c3aed', backgroundColor: '#7c3aed22' },
-  dayChipText: { color: '#475569', fontSize: 12, fontWeight: '600' },
-  dayChipTextActive: { color: '#a855f7' },
-  dueDateChipActive: { borderColor: '#0ea5e9', backgroundColor: '#0ea5e922' },
-  dueDateChipTextActive: { color: '#0ea5e9', fontWeight: '600' },
-  dueDateDayChipActive: { borderColor: '#0ea5e9', backgroundColor: '#0ea5e922' },
-  dueDateDayChipTextActive: { color: '#0ea5e9' },
-  stepBtnBlue: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#0ea5e944',
-    backgroundColor: '#0ea5e911',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  xpRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-  },
-  xpRowText: {
-    color: '#a855f7',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  buttons: { flexDirection: 'row', gap: 12, marginTop: 20 },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    alignItems: 'center',
-  },
-  cancelText: { color: '#94a3b8', fontSize: 15 },
-  saveBtn: {
-    flex: 2,
-    paddingVertical: 12,
-    borderRadius: 8,
-    backgroundColor: '#7c3aed',
-    alignItems: 'center',
-  },
-  saveBtnDisabled: { opacity: 0.5 },
-  saveText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  iconPickerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#0a0a0f',
-  },
-  iconPickerPreview: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconPickerPreviewEmpty: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    backgroundColor: '#0d0d14',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconPickerLabel: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  iconPickerLabelEmpty: {
-    flex: 1,
-    color: '#334155',
-    fontSize: 14,
-  },
-  classChipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  classChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    backgroundColor: '#0a0a0f',
-  },
-  classChipActive: {
-    borderColor: '#7c3aed',
-    backgroundColor: '#7c3aed22',
-  },
-  classChipText: { color: '#64748b', fontSize: 13 },
-  classChipTextActive: { color: '#a855f7', fontWeight: '600' },
-  subQuestList: {
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  subQuestRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-  },
-  subQuestName: {
-    flex: 1,
-    color: '#cbd5e1',
-    fontSize: 13,
-  },
-  subQuestBtn: {
-    padding: 4,
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    scroll: { flex: 1 },
+    container: { padding: 20, gap: 8 },
+    sectionLabel: {
+      color: theme.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      marginTop: 8,
+    },
+    textInput: {
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      color: theme.textPrimary,
+      fontSize: 15,
+    },
+    detailsInput: {
+      minHeight: 72,
+      textAlignVertical: 'top',
+      fontSize: 13,
+    },
+    sliderHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+      marginTop: 8,
+    },
+    sliderMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    tierLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+    },
+    sliderValue: {
+      color: theme.textDisabled,
+      fontSize: 12,
+    },
+    rewardRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    xpPreview: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: '#7c3aed22',
+      borderWidth: 1,
+      borderColor: '#7c3aed44',
+      borderRadius: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    xpPreviewText: {
+      color: '#a855f7',
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    goldInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: '#FFD70011',
+      borderWidth: 1,
+      borderColor: '#FFD70033',
+      borderRadius: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    goldInput: {
+      color: '#FFD700',
+      fontSize: 13,
+      fontWeight: '700',
+      minWidth: 28,
+      textAlign: 'center',
+    },
+    goldLabel: {
+      color: '#FFD700',
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    costInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: '#0ea5e911',
+      borderWidth: 1,
+      borderColor: '#0ea5e933',
+      borderRadius: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    costInput: {
+      color: '#0ea5e9',
+      fontSize: 13,
+      fontWeight: '700',
+      minWidth: 28,
+      textAlign: 'center',
+    },
+    costInputAmber: {
+      color: '#4ade80',
+    },
+    costInputRowAmber: {
+      backgroundColor: '#4ade8011',
+      borderColor: '#4ade8033',
+    },
+    inputDisabled: {
+      opacity: 0.35,
+    },
+    inputTextDisabled: {
+      color: theme.textDisabled,
+    },
+    costLabelBlue: {
+      color: '#0ea5e9',
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    costLabelAmber: {
+      color: '#4ade80',
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    picker: {
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      overflow: 'hidden',
+    },
+    switchRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    switchHint: {
+      color: theme.textTertiary,
+      fontSize: 11,
+      marginTop: 2,
+    },
+    scheduleTypeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    scheduleChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.bgPage,
+    },
+    scheduleChipActive: {
+      borderColor: '#7c3aed',
+      backgroundColor: '#7c3aed22',
+    },
+    scheduleChipText: { color: theme.textMuted, fontSize: 13 },
+    scheduleChipTextActive: { color: '#a855f7', fontWeight: '600' },
+    everyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 4,
+    },
+    everyLabel: { color: theme.textMuted, fontSize: 14 },
+    stepBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#7c3aed44',
+      backgroundColor: '#7c3aed11',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    everyValue: {
+      color: theme.textPrimary,
+      fontSize: 18,
+      fontWeight: '700',
+      minWidth: 28,
+      textAlign: 'center',
+    },
+    weekdayRow: { flexDirection: 'row', gap: 6 },
+    dayChip: {
+      flex: 1,
+      paddingVertical: 8,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.bgPage,
+      alignItems: 'center',
+    },
+    dayChipActive: { borderColor: '#7c3aed', backgroundColor: '#7c3aed22' },
+    dayChipText: { color: theme.textDisabled, fontSize: 12, fontWeight: '600' },
+    dayChipTextActive: { color: '#a855f7' },
+    dateTimeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+    dueDateChipActive: { borderColor: '#0ea5e9', backgroundColor: '#0ea5e922' },
+    dueDateChipTextActive: { color: '#0ea5e9', fontWeight: '600' },
+    dueDateDayChipActive: { borderColor: '#0ea5e9', backgroundColor: '#0ea5e922' },
+    dueDateDayChipTextActive: { color: '#0ea5e9' },
+    stepBtnBlue: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#0ea5e944',
+      backgroundColor: '#0ea5e911',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    xpRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+    },
+    xpRowText: {
+      color: '#a855f7',
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    buttons: { flexDirection: 'row', gap: 12, marginTop: 20 },
+    cancelBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      alignItems: 'center',
+    },
+    cancelText: { color: theme.textSecondary, fontSize: 15 },
+    saveBtn: {
+      flex: 2,
+      paddingVertical: 12,
+      borderRadius: 8,
+      backgroundColor: '#7c3aed',
+      alignItems: 'center',
+    },
+    saveBtnDisabled: { opacity: 0.5 },
+    saveText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+    iconPickerBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: theme.bgPage,
+    },
+    iconPickerPreview: {
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconPickerPreviewEmpty: {
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.bgDeep,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconPickerLabel: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    iconPickerLabelEmpty: {
+      flex: 1,
+      color: theme.textTertiary,
+      fontSize: 14,
+    },
+    classChipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 4,
+    },
+    classChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.bgPage,
+    },
+    classChipActive: {
+      borderColor: '#7c3aed',
+      backgroundColor: '#7c3aed22',
+    },
+    classChipText: { color: theme.textMuted, fontSize: 13 },
+    classChipTextActive: { color: '#a855f7', fontWeight: '600' },
+    subQuestList: {
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      borderRadius: 8,
+      overflow: 'hidden',
+    },
+    subQuestRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      gap: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+    },
+    subQuestName: {
+      flex: 1,
+      color: '#cbd5e1',
+      fontSize: 13,
+    },
+    subQuestBtn: {
+      padding: 4,
+    },
+  });
+}

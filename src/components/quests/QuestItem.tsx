@@ -20,6 +20,8 @@ import { DateInput } from '../shared/DateInput';
 import { tomorrowString } from '../../utils/dueDate';
 import { useQuestStore } from '../../store/questStore';
 import { useUIStore } from '../../store/uiStore';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme, resolveIconColor } from '../../theme';
 
 type DueDateStatus = 'overdue' | 'today' | 'soon' | 'ok';
 const DUE_COLORS: Record<DueDateStatus, string> = {
@@ -61,6 +63,9 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
   const [nextDueModalQuestId, setNextDueModalQuestId] = useState<string | null>(null);
   const [nextDueModalKey, setNextDueModalKey] = useState(0);
   const [nextDueDate, setNextDueDate] = useState<string | null>(null);
+
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const completeQuest = useQuestStore((s) => s.completeQuest);
   const skipQuest = useQuestStore((s) => s.skipQuest);
@@ -131,7 +136,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
           <View style={styles.header}>
             {quest.icon && (
               <View style={[styles.iconBadge, { borderColor: (quest.iconColor ?? '#a855f7') + '44', backgroundColor: (quest.iconColor ?? '#a855f7') + '18' }]}>
-                <Ionicons name={quest.icon as any} size={isChild ? 14 : 16} color={quest.iconColor ?? '#a855f7'} />
+                <Ionicons name={quest.icon as any} size={isChild ? 14 : 16} color={resolveIconColor(quest.iconColor ?? '#a855f7', theme.colorScheme)} />
               </View>
             )}
             <Text
@@ -148,7 +153,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                     style={styles.actionBtn}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Ionicons name="pencil-outline" size={16} color="#64748b" />
+                    <Ionicons name="pencil-outline" size={16} color={theme.textMuted} />
                   </TouchableOpacity>
                 </Tooltip>
               )}
@@ -158,7 +163,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                   style={styles.actionBtn}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="trash-outline" size={16} color="#64748b" />
+                  <Ionicons name="trash-outline" size={16} color={theme.textMuted} />
                 </TouchableOpacity>
               </Tooltip>
             </View>
@@ -282,7 +287,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                     <Ionicons
                       name={done ? 'checkmark-circle' : 'ellipse-outline'}
                       size={14}
-                      color={done ? '#ADFF2F' : '#334155'}
+                      color={done ? '#ADFF2F' : theme.textTertiary}
                     />
                     <Text
                       style={[styles.checkText, done && styles.checkTextDone]}
@@ -311,7 +316,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                     <Ionicons
                       name={quest.repeatable ? 'refresh-circle-outline' : 'checkmark-circle-outline'}
                       size={18}
-                      color={available ? '#ADFF2F' : '#334155'}
+                      color={available ? '#ADFF2F' : theme.textTertiary}
                     />
                     <Text style={[styles.completeBtnText, !available && styles.completeBtnTextDisabled]}>
                       {quest.repeatable ? 'Complete Again' : 'Complete'}
@@ -319,7 +324,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                   </TouchableOpacity>
                   {quest.repeatable && !!quest.dueDate && (
                     <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
-                      <Ionicons name="play-skip-forward-outline" size={16} color="#64748b" />
+                      <Ionicons name="play-skip-forward-outline" size={16} color={theme.textMuted} />
                       <Text style={styles.skipBtnText}>Skip</Text>
                     </TouchableOpacity>
                   )}
@@ -358,7 +363,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                 <Ionicons
                   name={expanded ? 'chevron-up' : 'chevron-down'}
                   size={14}
-                  color="#475569"
+                  color={theme.textDisabled}
                 />
                 <Text style={styles.subQuestToggleText}>
                   {expanded ? 'Hide subquests' : 'Show subquests'}
@@ -370,7 +375,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
                 onPress={() => onAddSubQuest(quest.id)}
                 hitSlop={{ top: 8, bottom: 8, left: 24, right: 8 }}
               >
-                <Ionicons name="add-circle-outline" size={14} color="#475569" />
+                <Ionicons name="add-circle-outline" size={14} color={theme.textDisabled} />
                 <Text style={styles.subQuestToggleText}>Add sub-quest</Text>
               </TouchableOpacity>
             ) : null
@@ -394,7 +399,7 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
               style={styles.addChildBtn}
               onPress={() => onAddSubQuest(quest.id)}
             >
-              <Ionicons name="add-circle-outline" size={15} color="#475569" />
+              <Ionicons name="add-circle-outline" size={15} color={theme.textDisabled} />
               <Text style={styles.addChildText}>Add sub-quest</Text>
             </TouchableOpacity>
           )}
@@ -450,385 +455,387 @@ export function QuestItem({ quest, onEdit, onAddSubQuest, isChild }: QuestItemPr
   );
 }
 
-const styles = StyleSheet.create({
-  rootWrapper: {
-    marginBottom: 8,
-  },
-  childWrapper: {
-    marginBottom: 4,
-  },
-  container: {
-    flexDirection: 'row',
-    backgroundColor: '#12121a',
-    borderRadius: 10,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-  },
-  childContainer: {
-    backgroundColor: '#0d0d14',
-    borderColor: '#151520',
-    borderRadius: 8,
-  },
-  completedContainer: {
-    opacity: 0.55,
-  },
-  difficultyBar: {
-    width: 4,
-  },
-  content: {
-    flex: 1,
-    padding: 12,
-    gap: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 8,
-  },
-  name: {
-    flex: 1,
-    color: '#e2e8f0',
-    fontSize: 15,
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-  details: {
-    color: '#64748b',
-    fontSize: 12,
-    lineHeight: 17,
-    marginBottom: 6,
-  },
-  childName: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  completedText: {
-    textDecorationLine: 'line-through',
-    color: '#94a3b8',
-  },
-  iconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionBtn: {
-    padding: 4,
-  },
-  meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  metaGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  metaLabel: {
-    color: '#64748b',
-    fontSize: 10,
-    fontWeight: '600',
-  },
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    rootWrapper: {
+      marginBottom: 8,
+    },
+    childWrapper: {
+      marginBottom: 4,
+    },
+    container: {
+      flexDirection: 'row',
+      backgroundColor: theme.bgCard,
+      borderRadius: 10,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+    },
+    childContainer: {
+      backgroundColor: theme.bgDeep,
+      borderColor: theme.borderSubtle,
+      borderRadius: 8,
+    },
+    completedContainer: {
+      opacity: 0.55,
+    },
+    difficultyBar: {
+      width: 4,
+    },
+    content: {
+      flex: 1,
+      padding: 12,
+      gap: 8,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      gap: 8,
+    },
+    name: {
+      flex: 1,
+      color: theme.textPrimary,
+      fontSize: 15,
+      fontWeight: '600',
+      lineHeight: 20,
+    },
+    details: {
+      color: theme.textMuted,
+      fontSize: 12,
+      lineHeight: 17,
+      marginBottom: 6,
+    },
+    childName: {
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    completedText: {
+      textDecorationLine: 'line-through',
+      color: theme.textSecondary,
+    },
+    iconBadge: {
+      width: 28,
+      height: 28,
+      borderRadius: 6,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    actionBtn: {
+      padding: 4,
+    },
+    meta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flexWrap: 'wrap',
+    },
+    metaGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    metaLabel: {
+      color: theme.textMuted,
+      fontSize: 10,
+      fontWeight: '600',
+    },
 
-  skillsSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  skillsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 4,
-    flex: 1,
-  },
-  skillText: {
-    color: '#7c3aed',
-    fontSize: 11,
-  },
-  rewardsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  rewardsLabel: {
-    color: '#64748b',
-    fontSize: 10,
-    fontWeight: '600',
-    width: 44,
-  },
-  costsLabel: {
-    color: '#64748b',
-    fontSize: 10,
-    fontWeight: '600',
-    width: 44,
-  },
-  rewardsBadges: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-    flex: 1,
-  },
-  rewardBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-  },
-  rewardText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  rewardXP: { backgroundColor: '#a855f711', borderColor: '#a855f733' },
-  rewardGold: { backgroundColor: '#FFD70011', borderColor: '#FFD70033' },
-  rewardEnergy: { backgroundColor: '#4ade8011', borderColor: '#4ade8033' },
-  rewardHydration: { backgroundColor: '#0ea5e911', borderColor: '#0ea5e933' },
-  costEnergy: { backgroundColor: '#4ade8011', borderColor: '#4ade8055' },
-  costHydration: { backgroundColor: '#0ea5e911', borderColor: '#0ea5e955' },
-  goldBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    backgroundColor: '#FFD70018',
-    borderWidth: 1,
-    borderColor: '#FFD70044',
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-  },
-  goldText: {
-    color: '#FFD700',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  repeatBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#06b6d411',
-    borderWidth: 1,
-    borderColor: '#06b6d433',
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-  },
-  repeatText: {
-    color: '#06b6d4',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  // Checklist on the card
-  checklist: {
-    gap: 5,
-    paddingTop: 2,
-    borderTopWidth: 1,
-    borderTopColor: '#1e1e2e',
-  },
-  checkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  checkText: {
-    flex: 1,
-    color: '#94a3b8',
-    fontSize: 12,
-  },
-  checkTextDone: {
-    textDecorationLine: 'line-through',
-    color: '#475569',
-  },
-  completeBtnRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  completeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#ADFF2F33',
-    backgroundColor: '#ADFF2F11',
-  },
-  skipBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#475569',
-    backgroundColor: 'transparent',
-  },
-  skipBtnText: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  completeBtnText: {
-    color: '#ADFF2F',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  completeBtnDisabled: {
-    borderColor: '#1e1e2e',
-    backgroundColor: 'transparent',
-  },
-  completeBtnTextDisabled: {
-    color: '#334155',
-  },
-  cooldownText: {
-    color: '#64748b',
-    fontSize: 11,
-  },
-  completedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  completedDate: {
-    color: '#94a3b8',
-    fontSize: 11,
-  },
-  resetBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#38bdf844',
-    backgroundColor: '#38bdf811',
-  },
-  resetBtnText: {
-    color: '#38bdf8',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  subQuestToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-end',
-    gap: 4,
-  },
-  subQuestToggleText: {
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  // Expanded sub-quest cards
-  childrenSection: {
-    marginTop: 2,
-    marginLeft: 12,
-    paddingLeft: 10,
-    borderLeftWidth: 2,
-    borderLeftColor: '#1e1e2e',
-  },
-  addChildBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 2,
-  },
-  addChildText: {
-    color: '#64748b',
-    fontSize: 12,
-  },
-  dueBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-  },
-  dueText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  // Next Due Date modal
-  nextDueOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  nextDueModal: {
-    width: '100%',
-    maxWidth: 340,
-    backgroundColor: '#12121a',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    padding: 20,
-    gap: 12,
-  },
-  nextDueTitle: {
-    color: '#e2e8f0',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  nextDueSubtitle: {
-    color: '#64748b',
-    fontSize: 13,
-  },
-  nextDueBtns: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  nextDueSkipBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 9,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-  },
-  nextDueSkipText: {
-    color: '#64748b',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  nextDueSetBtn: {
-    flex: 2,
-    alignItems: 'center',
-    paddingVertical: 9,
-    borderRadius: 8,
-    backgroundColor: '#7c3aed',
-  },
-  nextDueSetBtnDisabled: {
-    backgroundColor: '#1e1e2e',
-  },
-  nextDueSetText: {
-    color: '#e2e8f0',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
+    skillsSection: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    skillsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 4,
+      flex: 1,
+    },
+    skillText: {
+      color: '#7c3aed',
+      fontSize: 11,
+    },
+    rewardsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    rewardsLabel: {
+      color: theme.textMuted,
+      fontSize: 10,
+      fontWeight: '600',
+      width: 44,
+    },
+    costsLabel: {
+      color: theme.textMuted,
+      fontSize: 10,
+      fontWeight: '600',
+      width: 44,
+    },
+    rewardsBadges: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 4,
+      flex: 1,
+    },
+    rewardBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      borderWidth: 1,
+      borderRadius: 4,
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+    },
+    rewardText: {
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    rewardXP: { backgroundColor: '#a855f711', borderColor: '#a855f733' },
+    rewardGold: { backgroundColor: '#FFD70011', borderColor: '#FFD70033' },
+    rewardEnergy: { backgroundColor: '#4ade8011', borderColor: '#4ade8033' },
+    rewardHydration: { backgroundColor: '#0ea5e911', borderColor: '#0ea5e933' },
+    costEnergy: { backgroundColor: '#4ade8011', borderColor: '#4ade8055' },
+    costHydration: { backgroundColor: '#0ea5e911', borderColor: '#0ea5e955' },
+    goldBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+      backgroundColor: '#FFD70018',
+      borderWidth: 1,
+      borderColor: '#FFD70044',
+      borderRadius: 4,
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+    },
+    goldText: {
+      color: '#FFD700',
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    repeatBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      backgroundColor: '#06b6d411',
+      borderWidth: 1,
+      borderColor: '#06b6d433',
+      borderRadius: 4,
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+    },
+    repeatText: {
+      color: '#06b6d4',
+      fontSize: 10,
+      fontWeight: '600',
+    },
+    // Checklist on the card
+    checklist: {
+      gap: 5,
+      paddingTop: 2,
+      borderTopWidth: 1,
+      borderTopColor: theme.borderDefault,
+    },
+    checkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+    },
+    checkText: {
+      flex: 1,
+      color: theme.textSecondary,
+      fontSize: 12,
+    },
+    checkTextDone: {
+      textDecorationLine: 'line-through',
+      color: theme.textDisabled,
+    },
+    completeBtnRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flexWrap: 'wrap',
+    },
+    completeBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      alignSelf: 'flex-start',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: '#ADFF2F33',
+      backgroundColor: '#ADFF2F11',
+    },
+    skipBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      alignSelf: 'flex-start',
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: theme.textDisabled,
+      backgroundColor: 'transparent',
+    },
+    skipBtnText: {
+      color: theme.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    completeBtnText: {
+      color: '#ADFF2F',
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    completeBtnDisabled: {
+      borderColor: theme.borderDefault,
+      backgroundColor: 'transparent',
+    },
+    completeBtnTextDisabled: {
+      color: theme.textTertiary,
+    },
+    cooldownText: {
+      color: theme.textMuted,
+      fontSize: 11,
+    },
+    completedRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    completedDate: {
+      color: theme.textSecondary,
+      fontSize: 11,
+    },
+    resetBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: '#38bdf844',
+      backgroundColor: '#38bdf811',
+    },
+    resetBtnText: {
+      color: '#38bdf8',
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    subQuestToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-end',
+      gap: 4,
+    },
+    subQuestToggleText: {
+      color: theme.textMuted,
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    // Expanded sub-quest cards
+    childrenSection: {
+      marginTop: 2,
+      marginLeft: 12,
+      paddingLeft: 10,
+      borderLeftWidth: 2,
+      borderLeftColor: theme.borderDefault,
+    },
+    addChildBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      paddingHorizontal: 2,
+    },
+    addChildText: {
+      color: theme.textMuted,
+      fontSize: 12,
+    },
+    dueBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      borderWidth: 1,
+      borderRadius: 4,
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+    },
+    dueText: {
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    // Next Due Date modal
+    nextDueOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    nextDueModal: {
+      width: '100%',
+      maxWidth: 340,
+      backgroundColor: theme.bgCard,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      padding: 20,
+      gap: 12,
+    },
+    nextDueTitle: {
+      color: theme.textPrimary,
+      fontSize: 17,
+      fontWeight: '700',
+    },
+    nextDueSubtitle: {
+      color: theme.textMuted,
+      fontSize: 13,
+    },
+    nextDueBtns: {
+      flexDirection: 'row',
+      gap: 10,
+      marginTop: 4,
+    },
+    nextDueSkipBtn: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 9,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+    },
+    nextDueSkipText: {
+      color: theme.textMuted,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    nextDueSetBtn: {
+      flex: 2,
+      alignItems: 'center',
+      paddingVertical: 9,
+      borderRadius: 8,
+      backgroundColor: '#7c3aed',
+    },
+    nextDueSetBtnDisabled: {
+      backgroundColor: theme.borderDefault,
+    },
+    nextDueSetText: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+  });
+}

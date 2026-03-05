@@ -21,6 +21,8 @@ import { getTier, TIER_LABELS } from '../../types';
 import { HeroClassDef } from '../../types';
 import { ClassFormModal } from './ClassFormModal';
 import { SkillChip } from '../shared/SkillChip';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface ClassPickerModalProps {
   visible: boolean;
@@ -35,6 +37,9 @@ export function ClassPickerModal({
   onSelect,
   onClose,
 }: ClassPickerModalProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const [formVisible, setFormVisible] = useState(false);
   const [editingClass, setEditingClass] = useState<HeroClassDef | null>(null);
 
@@ -126,7 +131,7 @@ export function ClassPickerModal({
           <Ionicons
             name={classDef.icon as any}
             size={22}
-            color={qualifies ? classDef.color : '#334155'}
+            color={qualifies ? classDef.color : theme.textTertiary}
           />
         </View>
         <View style={styles.cardBody}>
@@ -155,14 +160,14 @@ export function ClassPickerModal({
                     style={styles.iconBtn}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Ionicons name="pencil-outline" size={15} color="#64748b" />
+                    <Ionicons name="pencil-outline" size={15} color={theme.textMuted} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleDelete(classDef)}
                     style={styles.iconBtn}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <Ionicons name="trash-outline" size={15} color="#64748b" />
+                    <Ionicons name="trash-outline" size={15} color={theme.textMuted} />
                   </TouchableOpacity>
                 </>
               )}
@@ -271,8 +276,8 @@ export function ClassPickerModal({
           {!equipped && (
             !qualifies ? (
               <View style={[styles.equipBtn, styles.equipBtnLocked]}>
-                <Ionicons name="lock-closed-outline" size={14} color="#334155" />
-                <Text style={[styles.equipBtnText, { color: '#334155' }]}>Locked</Text>
+                <Ionicons name="lock-closed-outline" size={14} color={theme.textTertiary} />
+                <Text style={[styles.equipBtnText, { color: theme.textTertiary }]}>Locked</Text>
               </View>
             ) : !userUnlocked ? (
               <TouchableOpacity
@@ -309,7 +314,7 @@ export function ClassPickerModal({
           <View style={styles.header}>
             <Text style={styles.heading}>Choose Class</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={24} color="#64748b" />
+              <Ionicons name="close" size={24} color={theme.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -346,148 +351,150 @@ export function ClassPickerModal({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0a0a0f' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-    backgroundColor: '#12121a',
-  },
-  heading: { color: '#e2e8f0', fontSize: 18, fontWeight: '700' },
-  closeBtn: { padding: 4 },
-  list: { padding: 16, gap: 10, paddingBottom: 32 },
-  sectionLabel: {
-    color: '#475569',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 2,
-    marginTop: 4,
-  },
-  customHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  createBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#7c3aed22',
-    borderWidth: 1,
-    borderColor: '#7c3aed44',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  createBtnText: { color: '#a855f7', fontSize: 12, fontWeight: '600' },
-  emptyCustom: {
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    borderRadius: 10,
-    borderStyle: 'dashed',
-    padding: 20,
-    alignItems: 'center',
-  },
-  emptyCustomText: { color: '#334155', fontSize: 13 },
-  card: {
-    flexDirection: 'row',
-    backgroundColor: '#12121a',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    overflow: 'hidden',
-  },
-  cardEquipped: { borderColor: '#a855f744', backgroundColor: '#a855f708' },
-  cardLocked: { opacity: 0.6 },
-  accentBar: {
-    width: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  cardBody: { flex: 1, padding: 12, gap: 10 },
-  cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  cardTitle: { flex: 1, gap: 2 },
-  className: { color: '#e2e8f0', fontSize: 15, fontWeight: '700' },
-  classDesc: { color: '#64748b', fontSize: 12, lineHeight: 17 },
-  lockedText: { color: '#475569' },
-  lockedSubText: { color: '#334155' },
-  cardActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flexShrink: 0,
-  },
-  iconBtn: { padding: 3 },
-  equippedBadge: {
-    backgroundColor: '#a855f722',
-    borderWidth: 1,
-    borderColor: '#a855f744',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  equippedText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
-  classXpSection: {
-    gap: 4,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#1e1e2e',
-  },
-  classXpRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  classXpLevel: { fontSize: 12, fontWeight: '700' },
-  classXpText: { color: '#475569', fontSize: 11 },
-  classXpBar: {
-    height: 4,
-    backgroundColor: '#0a0a0f',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  classXpFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  requirements: {
-    gap: 5,
-    paddingTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#1e1e2e',
-  },
-  reqHeading: {
-    color: '#475569',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginBottom: 2,
-  },
-  reqRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  reqText: { fontSize: 12, fontWeight: '600' },
-  reqMet: { color: '#ADFF2F' },
-  reqUnmet: { color: '#ef4444' },
-  reqCurrent: { color: '#475569', fontSize: 11 },
-  equipBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  equipBtnLocked: { borderColor: '#1e1e2e', backgroundColor: 'transparent' },
-  equipBtnText: { fontSize: 12, fontWeight: '600' },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: theme.bgPage },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+      backgroundColor: theme.bgCard,
+    },
+    heading: { color: theme.textPrimary, fontSize: 18, fontWeight: '700' },
+    closeBtn: { padding: 4 },
+    list: { padding: 16, gap: 10, paddingBottom: 32 },
+    sectionLabel: {
+      color: theme.textDisabled,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      marginBottom: 2,
+      marginTop: 4,
+    },
+    customHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 2,
+    },
+    createBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: '#7c3aed22',
+      borderWidth: 1,
+      borderColor: '#7c3aed44',
+      borderRadius: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    createBtnText: { color: '#a855f7', fontSize: 12, fontWeight: '600' },
+    emptyCustom: {
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      borderRadius: 10,
+      borderStyle: 'dashed',
+      padding: 20,
+      alignItems: 'center',
+    },
+    emptyCustomText: { color: theme.textTertiary, fontSize: 13 },
+    card: {
+      flexDirection: 'row',
+      backgroundColor: theme.bgCard,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      overflow: 'hidden',
+    },
+    cardEquipped: { borderColor: '#a855f744', backgroundColor: '#a855f708' },
+    cardLocked: { opacity: 0.6 },
+    accentBar: {
+      width: 52,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    cardBody: { flex: 1, padding: 12, gap: 10 },
+    cardHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+    cardTitle: { flex: 1, gap: 2 },
+    className: { color: theme.textPrimary, fontSize: 15, fontWeight: '700' },
+    classDesc: { color: theme.textMuted, fontSize: 12, lineHeight: 17 },
+    lockedText: { color: theme.textDisabled },
+    lockedSubText: { color: theme.textTertiary },
+    cardActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      flexShrink: 0,
+    },
+    iconBtn: { padding: 3 },
+    equippedBadge: {
+      backgroundColor: '#a855f722',
+      borderWidth: 1,
+      borderColor: '#a855f744',
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    equippedText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
+    classXpSection: {
+      gap: 4,
+      paddingTop: 4,
+      borderTopWidth: 1,
+      borderTopColor: theme.borderDefault,
+    },
+    classXpRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    classXpLevel: { fontSize: 12, fontWeight: '700' },
+    classXpText: { color: theme.textDisabled, fontSize: 11 },
+    classXpBar: {
+      height: 4,
+      backgroundColor: theme.bgPage,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    classXpFill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    requirements: {
+      gap: 5,
+      paddingTop: 4,
+      borderTopWidth: 1,
+      borderTopColor: theme.borderDefault,
+    },
+    reqHeading: {
+      color: theme.textDisabled,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      marginBottom: 2,
+    },
+    reqRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    reqText: { fontSize: 12, fontWeight: '600' },
+    reqMet: { color: '#ADFF2F' },
+    reqUnmet: { color: '#ef4444' },
+    reqCurrent: { color: theme.textDisabled, fontSize: 11 },
+    equipBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      alignSelf: 'flex-start',
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: 6,
+      borderWidth: 1,
+    },
+    equipBtnLocked: { borderColor: theme.borderDefault, backgroundColor: 'transparent' },
+    equipBtnText: { fontSize: 12, fontWeight: '600' },
+  });
+}

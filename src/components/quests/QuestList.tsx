@@ -16,6 +16,8 @@ import { useUIStore } from '../../store/uiStore';
 import { Quest, getTier } from '../../types';
 import { QuestItem } from './QuestItem';
 import { FilterBar } from './FilterBar';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface QuestListProps {
   onAddQuest: () => void;
@@ -41,6 +43,9 @@ export function QuestList({ onAddQuest, onEditQuest, onAddSubQuest }: QuestListP
     showCompleted: s.showCompleted,
     sortOrder: s.sortOrder,
   })));
+
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const filtered = useMemo(() => {
     // Only show root-level quests
@@ -120,7 +125,7 @@ export function QuestList({ onAddQuest, onEditQuest, onAddSubQuest }: QuestListP
         <Text style={styles.heading}>Quests</Text>
         <View style={styles.headerBtns}>
           <TouchableOpacity style={styles.logBtn} onPress={() => setShowLog(true)}>
-            <Ionicons name="list-outline" size={16} color="#64748b" />
+            <Ionicons name="list-outline" size={16} color={theme.textMuted} />
             <Text style={styles.logBtnText}>Quest Log</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.addBtn} onPress={onAddQuest}>
@@ -140,7 +145,7 @@ export function QuestList({ onAddQuest, onEditQuest, onAddSubQuest }: QuestListP
           <View style={styles.modalHeader}>
             <Text style={styles.modalHeading}>Quest Log</Text>
             <TouchableOpacity onPress={() => setShowLog(false)} style={styles.closeBtn}>
-              <Ionicons name="close" size={24} color="#64748b" />
+              <Ionicons name="close" size={24} color={theme.textMuted} />
             </TouchableOpacity>
           </View>
           <LogList />
@@ -156,7 +161,7 @@ export function QuestList({ onAddQuest, onEditQuest, onAddSubQuest }: QuestListP
       >
         {filtered.length === 0 ? (
           <View style={styles.empty}>
-            <Ionicons name="folder-open-outline" size={40} color="#1e1e2e" />
+            <Ionicons name="folder-open-outline" size={40} color={theme.borderDefault} />
             <Text style={styles.emptyText}>No quests yet</Text>
             <Text style={styles.emptySubtext}>Tap Add to create your first quest</Text>
           </View>
@@ -175,66 +180,68 @@ export function QuestList({ onAddQuest, onEditQuest, onAddSubQuest }: QuestListP
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  heading: {
-    color: '#e2e8f0',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  headerBtns: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  logBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  logBtnText: { color: '#64748b', fontSize: 13, fontWeight: '600' },
-  modalSafe: { flex: 1, backgroundColor: '#0a0a0f' },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-    backgroundColor: '#12121a',
-  },
-  modalHeading: { color: '#e2e8f0', fontSize: 18, fontWeight: '700' },
-  closeBtn: { padding: 4 },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#7c3aed',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  addBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  scrollView: { flex: 1 },
-  listContent: { paddingBottom: 16 },
-  empty: {
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  emptyContainer: { flexGrow: 1, justifyContent: 'center' },
-  emptyText: { color: '#475569', fontSize: 16, fontWeight: '600' },
-  emptySubtext: { color: '#334155', fontSize: 13 },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: { flex: 1 },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    heading: {
+      color: theme.textPrimary,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    headerBtns: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    logBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    logBtnText: { color: theme.textMuted, fontSize: 13, fontWeight: '600' },
+    modalSafe: { flex: 1, backgroundColor: theme.bgPage },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+      backgroundColor: theme.bgCard,
+    },
+    modalHeading: { color: theme.textPrimary, fontSize: 18, fontWeight: '700' },
+    closeBtn: { padding: 4 },
+    addBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: '#7c3aed',
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 8,
+    },
+    addBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+    scrollView: { flex: 1 },
+    listContent: { paddingBottom: 16 },
+    empty: {
+      alignItems: 'center',
+      gap: 8,
+      paddingVertical: 16,
+    },
+    emptyContainer: { flexGrow: 1, justifyContent: 'center' },
+    emptyText: { color: theme.textDisabled, fontSize: 16, fontWeight: '600' },
+    emptySubtext: { color: theme.textTertiary, fontSize: 13 },
+  });
+}

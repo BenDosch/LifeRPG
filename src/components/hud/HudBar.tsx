@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,8 +10,13 @@ import { getClassLevel } from '../../utils/classLevels';
 import { XpBar } from './XpBar';
 import { EnergyBar } from './EnergyBar';
 import { HydrationBar } from './HydrationBar';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 export function HudBar() {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const { name, heroClass, customClasses, gold } = useCharacterStore(
     useShallow((s) => ({ name: s.name, heroClass: s.heroClass, customClasses: s.customClasses, gold: s.gold }))
   );
@@ -50,63 +55,65 @@ export function HudBar() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { backgroundColor: '#12121a' },
-  container: {
-    backgroundColor: '#12121a',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  identity: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  classRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  name: {
-    color: '#e2e8f0',
-    fontSize: 15,
-    fontWeight: '700',
-    fontFamily: 'Electrolize-Regular',
-  },
-  title: {
-    color: '#7c3aed',
-    fontSize: 12,
-    fontFamily: 'Electrolize-Regular',
-  },
-  badges: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  goldBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#FFD70018',
-    borderWidth: 1,
-    borderColor: '#FFD70044',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  goldText: {
-    color: '#FFD700',
-    fontSize: 13,
-    fontWeight: '700',
-    fontFamily: 'Electrolize-Regular',
-  },
-  bars: { gap: 6 },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    safe: { backgroundColor: theme.bgCard },
+    container: {
+      backgroundColor: theme.bgCard,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      gap: 8,
+    },
+    identity: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    classRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+    },
+    name: {
+      color: theme.textPrimary,
+      fontSize: 15,
+      fontWeight: '700',
+      fontFamily: 'Electrolize-Regular',
+    },
+    title: {
+      color: '#7c3aed',
+      fontSize: 12,
+      fontFamily: 'Electrolize-Regular',
+    },
+    badges: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    goldBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+      backgroundColor: '#FFD70018',
+      borderWidth: 1,
+      borderColor: '#FFD70044',
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    goldText: {
+      color: '#FFD700',
+      fontSize: 13,
+      fontWeight: '700',
+      fontFamily: 'Electrolize-Regular',
+    },
+    bars: { gap: 6 },
+  });
+}

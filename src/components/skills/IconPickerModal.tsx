@@ -10,6 +10,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme, resolveIconColor } from '../../theme';
 
 export interface IconEntry {
   icon: keyof typeof Ionicons.glyphMap;
@@ -437,7 +439,7 @@ export const SKILL_ICONS: IconEntry[] = [
 
   // Sports
   { icon: 'golf-outline',            label: 'Golf',         category: 'Sports' },
-  { icon: 'soccer-outline',          label: 'Soccer',       category: 'Sports' },
+  { icon: 'tennisball-outline',       label: 'Soccer',       category: 'Sports' },
   { icon: 'football-outline',        label: 'Football',     category: 'Sports' },
   { icon: 'american-football-outline',label: 'Am. Football',category: 'Sports' },
   { icon: 'basketball-outline',      label: 'Basketball',   category: 'Sports' },
@@ -548,6 +550,7 @@ function formatIconLabel(name: string): string {
 interface IconPickerModalProps {
   visible: boolean;
   skillName: string;
+  title?: string;
   currentIcon: string | null;
   currentColor: string | null;
   onConfirm: (icon: string | null, color: string | null) => void;
@@ -559,6 +562,7 @@ interface IconPickerModalProps {
 export function IconPickerModal({
   visible,
   skillName,
+  title = 'Customise skill',
   currentIcon,
   currentColor,
   onConfirm,
@@ -566,6 +570,8 @@ export function IconPickerModal({
   onRename,
   onDelete,
 }: IconPickerModalProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const { width } = useWindowDimensions();
   const numColumns = Math.max(4, Math.floor(width / 72));
 
@@ -637,15 +643,15 @@ export function IconPickerModal({
 
         {/* Header with live preview */}
         <View style={styles.header}>
-          <View style={[styles.preview, { borderColor: draftIcon ? draftColor + '66' : '#1e1e2e', backgroundColor: draftIcon ? draftColor + '22' : '#0d0d14' }]}>
+          <View style={[styles.preview, { borderColor: draftIcon ? draftColor + '66' : theme.borderDefault, backgroundColor: draftIcon ? draftColor + '22' : theme.bgDeep }]}>
             {draftIcon ? (
-              <Ionicons name={draftIcon as keyof typeof Ionicons.glyphMap} size={28} color={draftColor} />
+              <Ionicons name={draftIcon as keyof typeof Ionicons.glyphMap} size={28} color={resolveIconColor(draftColor, theme.colorScheme)} />
             ) : (
-              <Ionicons name="help-outline" size={24} color="#334155" />
+              <Ionicons name="help-outline" size={24} color={theme.textTertiary} />
             )}
           </View>
           <View style={styles.headerText}>
-            <Text style={styles.headerLabel}>Customise skill</Text>
+            <Text style={styles.headerLabel}>{title}</Text>
             {editingName ? (
               <View style={styles.nameEditRow}>
                 <TextInput
@@ -669,7 +675,7 @@ export function IconPickerModal({
                   <Ionicons name="checkmark" size={18} color="#a855f7" />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => { setDraftName(skillName); setEditingName(false); }}>
-                  <Ionicons name="close" size={18} color="#475569" />
+                  <Ionicons name="close" size={18} color={theme.textDisabled} />
                 </TouchableOpacity>
               </View>
             ) : (
@@ -679,7 +685,7 @@ export function IconPickerModal({
                 disabled={!onRename}
               >
                 <Text style={styles.skillName}>{skillName}</Text>
-                {onRename && <Ionicons name="pencil-outline" size={13} color="#475569" style={{ marginLeft: 5 }} />}
+                {onRename && <Ionicons name="pencil-outline" size={13} color={theme.textDisabled} style={{ marginLeft: 5 }} />}
               </TouchableOpacity>
             )}
           </View>
@@ -689,7 +695,7 @@ export function IconPickerModal({
             </TouchableOpacity>
           )}
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Ionicons name="close" size={20} color="#475569" />
+            <Ionicons name="close" size={20} color={theme.textDisabled} />
           </TouchableOpacity>
         </View>
 
@@ -700,10 +706,10 @@ export function IconPickerModal({
             {SKILL_COLORS.map((color) => (
               <TouchableOpacity
                 key={color}
-                style={[styles.swatch, { backgroundColor: color }, draftColor === color && styles.swatchSelected]}
+                style={[styles.swatch, { backgroundColor: resolveIconColor(color, theme.colorScheme) }, draftColor === color && styles.swatchSelected]}
                 onPress={() => setDraftColor(color)}
               >
-                {draftColor === color && <Ionicons name="checkmark" size={14} color="#fff" />}
+                {draftColor === color && <Ionicons name="checkmark" size={14} color={resolveIconColor(color, theme.colorScheme) === '#ffffff' ? '#000000' : '#ffffff'} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -711,18 +717,18 @@ export function IconPickerModal({
           <Text style={styles.sectionLabel}>Icon</Text>
 
           <View style={styles.searchBox}>
-            <Ionicons name="search-outline" size={15} color="#475569" />
+            <Ionicons name="search-outline" size={15} color={theme.textDisabled} />
             <TextInput
               style={styles.searchInput}
               value={search}
               onChangeText={setSearch}
               placeholder="Search all icons..."
-              placeholderTextColor="#334155"
+              placeholderTextColor={theme.textTertiary}
               returnKeyType="search"
             />
             {search ? (
               <TouchableOpacity onPress={() => setSearch('')}>
-                <Ionicons name="close-circle" size={15} color="#475569" />
+                <Ionicons name="close-circle" size={15} color={theme.textDisabled} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -758,17 +764,18 @@ export function IconPickerModal({
             keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => {
               const isSelected = draftIcon === item.icon;
+              const resolvedDraftColor = resolveIconColor(draftColor, theme.colorScheme);
               return (
                 <TouchableOpacity
-                  style={[styles.iconCell, isSelected && { borderColor: draftColor, backgroundColor: draftColor + '22' }]}
+                  style={[styles.iconCell, isSelected && { borderColor: resolvedDraftColor, backgroundColor: resolvedDraftColor + '22' }]}
                   onPress={() => setDraftIcon(isSelected ? null : item.icon)}
                 >
                   <Ionicons
                     name={item.icon}
                     size={24}
-                    color={isSelected ? draftColor : '#475569'}
+                    color={isSelected ? resolvedDraftColor : theme.textDisabled}
                   />
-                  <Text style={[styles.iconLabel, isSelected && { color: draftColor }]} numberOfLines={1}>
+                  <Text style={[styles.iconLabel, isSelected && { color: resolvedDraftColor }]} numberOfLines={1}>
                     {item.label}
                   </Text>
                 </TouchableOpacity>
@@ -810,185 +817,189 @@ export function IconPickerModal({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000000aa',
-  },
-  sheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#12121a',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderTopWidth: 1,
-    borderColor: '#1e1e2e',
-    maxHeight: '85%',
-    flexDirection: 'column',
-  },
-  fixedTop: {
-    flexShrink: 0,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-  },
-  preview: {
-    width: 52,
-    height: 52,
-    borderRadius: 12,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerText: { flex: 1 },
-  headerLabel: { color: '#475569', fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  skillName: { color: '#e2e8f0', fontSize: 17, fontWeight: '700', marginTop: 1 },
-  closeBtn: { padding: 4 },
-  trashBtn: { padding: 4, marginRight: 4 },
-  nameRow: { flexDirection: 'row', alignItems: 'center' },
-  nameEditRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  nameInput: {
-    flex: 1,
-    color: '#e2e8f0',
-    fontSize: 17,
-    fontWeight: '700',
-    borderBottomWidth: 1,
-    borderBottomColor: '#7c3aed',
-    paddingVertical: 2,
-    minWidth: 80,
-  },
-  deleteConfirmText: { color: '#ef444499', fontSize: 13, marginBottom: 2 },
-  deleteConfirmBtns: { flexDirection: 'row', gap: 10 },
-  deleteBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: '#ef444418',
-    borderWidth: 1,
-    borderColor: '#ef444440',
-    alignItems: 'center',
-  },
-  deleteBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '700' },
-  sectionLabel: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
-  },
-  swatches: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    paddingHorizontal: 16,
-  },
-  swatch: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  swatchSelected: {
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0d0d14',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    marginHorizontal: 16,
-    gap: 6,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#e2e8f0',
-    fontSize: 13,
-  },
-  noResults: {
-    color: '#334155',
-    fontSize: 13,
-    textAlign: 'center',
-    paddingVertical: 24,
-  },
-  grid: { paddingHorizontal: 8, paddingBottom: 8, paddingTop: 8 },
-  iconCell: {
-    flex: 1,
-    margin: 4,
-    paddingVertical: 10,
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    backgroundColor: '#0d0d14',
-  },
-  iconLabel: { color: '#475569', fontSize: 9, fontWeight: '600' },
-  variantRow: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 10,
-    marginBottom: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    overflow: 'hidden',
-  },
-  variantBtn: {
-    flex: 1,
-    paddingVertical: 7,
-    alignItems: 'center',
-    backgroundColor: '#0d0d14',
-  },
-  variantBtnActive: {
-    backgroundColor: '#1e1e2e',
-  },
-  variantText: {
-    color: '#475569',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  variantTextActive: {
-    color: '#e2e8f0',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 10,
-    padding: 16,
-    paddingBottom: 32,
-    borderTopWidth: 1,
-    borderTopColor: '#1e1e2e',
-  },
-  clearBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    alignItems: 'center',
-  },
-  clearText: { color: '#64748b', fontSize: 14 },
-  doneBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  doneText: { color: '#000', fontSize: 15, fontWeight: '700' },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: '#000000aa',
+    },
+    sheet: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: theme.bgCard,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      borderTopWidth: 1,
+      borderColor: theme.borderDefault,
+      maxHeight: '85%',
+      flexDirection: 'column',
+    },
+    fixedTop: {
+      flexShrink: 0,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+    },
+    preview: {
+      width: 52,
+      height: 52,
+      borderRadius: 12,
+      borderWidth: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerText: { flex: 1 },
+    headerLabel: { color: theme.textDisabled, fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+    skillName: { color: theme.textPrimary, fontSize: 17, fontWeight: '700', marginTop: 1 },
+    closeBtn: { padding: 4 },
+    trashBtn: { padding: 4, marginRight: 4 },
+    nameRow: { flexDirection: 'row', alignItems: 'center' },
+    nameEditRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    nameInput: {
+      flex: 1,
+      color: theme.textPrimary,
+      fontSize: 17,
+      fontWeight: '700',
+      borderBottomWidth: 1,
+      borderBottomColor: '#7c3aed',
+      paddingVertical: 2,
+      minWidth: 80,
+    },
+    deleteConfirmText: { color: '#ef444499', fontSize: 13, marginBottom: 2 },
+    deleteConfirmBtns: { flexDirection: 'row', gap: 10 },
+    deleteBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      backgroundColor: '#ef444418',
+      borderWidth: 1,
+      borderColor: '#ef444440',
+      alignItems: 'center',
+    },
+    deleteBtnText: { color: '#ef4444', fontSize: 14, fontWeight: '700' },
+    sectionLabel: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      paddingHorizontal: 16,
+      paddingTop: 14,
+      paddingBottom: 8,
+    },
+    swatches: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      paddingHorizontal: 16,
+    },
+    swatch: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.borderMuted,
+    },
+    swatchSelected: {
+      borderWidth: 2.5,
+      borderColor: theme.textPrimary,
+    },
+    searchBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.bgDeep,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      paddingHorizontal: 10,
+      paddingVertical: 7,
+      marginHorizontal: 16,
+      gap: 6,
+    },
+    searchInput: {
+      flex: 1,
+      color: theme.textPrimary,
+      fontSize: 13,
+    },
+    noResults: {
+      color: theme.textTertiary,
+      fontSize: 13,
+      textAlign: 'center',
+      paddingVertical: 24,
+    },
+    grid: { paddingHorizontal: 8, paddingBottom: 8, paddingTop: 8 },
+    iconCell: {
+      flex: 1,
+      margin: 4,
+      paddingVertical: 10,
+      alignItems: 'center',
+      gap: 4,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: 'transparent',
+      backgroundColor: theme.bgDeep,
+    },
+    iconLabel: { color: theme.textDisabled, fontSize: 9, fontWeight: '600' },
+    variantRow: {
+      flexDirection: 'row',
+      marginHorizontal: 16,
+      marginTop: 10,
+      marginBottom: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      overflow: 'hidden',
+    },
+    variantBtn: {
+      flex: 1,
+      paddingVertical: 7,
+      alignItems: 'center',
+      backgroundColor: theme.bgDeep,
+    },
+    variantBtnActive: {
+      backgroundColor: theme.borderDefault,
+    },
+    variantText: {
+      color: theme.textDisabled,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    variantTextActive: {
+      color: theme.textPrimary,
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: 10,
+      padding: 16,
+      paddingBottom: 32,
+      borderTopWidth: 1,
+      borderTopColor: theme.borderDefault,
+    },
+    clearBtn: {
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      alignItems: 'center',
+    },
+    clearText: { color: theme.textMuted, fontSize: 14 },
+    doneBtn: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 10,
+      alignItems: 'center',
+    },
+    doneText: { color: '#000', fontSize: 15, fontWeight: '700' },
+  });
+}

@@ -20,6 +20,8 @@ import { IconPickerModal } from '../skills/IconPickerModal';
 import { getSkillLevels } from '../../utils/skillLevels';
 import { getClassLevel } from '../../utils/classLevels';
 import { calcLevel } from '../../utils/xp';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 const COLOR_OPTIONS = [
   '#ef4444', '#f97316', '#f59e0b', '#FFD700', '#ADFF2F',
@@ -42,6 +44,9 @@ interface Props {
 }
 
 export function ClassFormModal({ visible, editClass, onClose }: Props) {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [color, setColor] = useState('#a855f7');
@@ -199,7 +204,7 @@ export function ClassFormModal({ visible, editClass, onClose }: Props) {
         <View style={styles.header}>
           <Text style={styles.heading}>{editClass ? 'Edit Class' : 'New Class'}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Ionicons name="close" size={24} color="#64748b" />
+            <Ionicons name="close" size={24} color={theme.textMuted} />
           </TouchableOpacity>
         </View>
 
@@ -223,7 +228,7 @@ export function ClassFormModal({ visible, editClass, onClose }: Props) {
               value={name}
               onChangeText={setName}
               placeholder="e.g. Ranger, Ninja, Chef..."
-              placeholderTextColor="#334155"
+              placeholderTextColor={theme.textTertiary}
               returnKeyType="next"
             />
           </View>
@@ -236,7 +241,7 @@ export function ClassFormModal({ visible, editClass, onClose }: Props) {
               value={description}
               onChangeText={setDescription}
               placeholder="A short flavour text..."
-              placeholderTextColor="#334155"
+              placeholderTextColor={theme.textTertiary}
               returnKeyType="done"
             />
           </View>
@@ -256,7 +261,7 @@ export function ClassFormModal({ visible, editClass, onClose }: Props) {
                   onPress={() => setColor(c)}
                 >
                   {color === c && (
-                    <Ionicons name="checkmark" size={14} color="#0a0a0f" />
+                    <Ionicons name="checkmark" size={14} color={theme.bgPage} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -274,7 +279,7 @@ export function ClassFormModal({ visible, editClass, onClose }: Props) {
                 <Ionicons name={icon as any} size={24} color={color} />
               </View>
               <Text style={[styles.iconPickerLabel, { color }]}>{icon.replace(/-outline$/, '').split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Text>
-              <Ionicons name="chevron-forward" size={16} color="#475569" />
+              <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
             </TouchableOpacity>
           </View>
 
@@ -317,7 +322,7 @@ export function ClassFormModal({ visible, editClass, onClose }: Props) {
                       ))}
                     </View>
                     <TouchableOpacity onPress={() => removeReq(idx)} style={styles.removeBtn}>
-                      <Ionicons name="close-circle" size={20} color="#475569" />
+                      <Ionicons name="close-circle" size={20} color={theme.textDisabled} />
                     </TouchableOpacity>
                   </View>
 
@@ -336,7 +341,7 @@ export function ClassFormModal({ visible, editClass, onClose }: Props) {
                           )
                         }
                         placeholder={req.type === 'skill' ? 'Skill name' : 'Class name'}
-                        placeholderTextColor="#334155"
+                        placeholderTextColor={theme.textTertiary}
                         returnKeyType="done"
                       />
                     )}
@@ -480,228 +485,230 @@ export function ClassFormModal({ visible, editClass, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0a0a0f' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-    backgroundColor: '#12121a',
-  },
-  heading: { color: '#e2e8f0', fontSize: 18, fontWeight: '700' },
-  closeBtn: { padding: 4 },
-  content: { padding: 16, gap: 20, paddingBottom: 40 },
-  preview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
-  },
-  previewIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  previewName: { fontSize: 18, fontWeight: '700' },
-  field: { gap: 8 },
-  label: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  optional: { color: '#334155', fontWeight: '500', textTransform: 'none' },
-  input: {
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: '#e2e8f0',
-    fontSize: 14,
-  },
-  colorRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  colorSwatch: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  colorSwatchSelected: {
-    borderWidth: 3,
-    borderColor: '#e2e8f0',
-  },
-  iconPickerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  iconPickerPreview: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconPickerLabel: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  reqBlock: { gap: 6, marginBottom: 6 },
-  reqTypeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  reqTypePills: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 4,
-  },
-  typePill: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 5,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    backgroundColor: '#0a0a0f',
-  },
-  typePillActive: {
-    borderColor: '#7c3aed55',
-    backgroundColor: '#7c3aed22',
-  },
-  typePillText: {
-    color: '#475569',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  typePillTextActive: {
-    color: '#a855f7',
-  },
-  reqRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  reqTextInput: { flex: 1 },
-  reqStaticLabel: {
-    flex: 1,
-    color: '#64748b',
-    fontSize: 13,
-    fontStyle: 'italic',
-    paddingHorizontal: 4,
-  },
-  questsFields: {
-    gap: 8,
-    paddingLeft: 4,
-  },
-  questsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  questsFieldLabel: {
-    color: '#64748b',
-    fontSize: 12,
-    fontWeight: '600',
-    width: 60,
-  },
-  tierBadgeRow: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 5,
-    justifyContent: 'flex-end',
-  },
-  tierBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    backgroundColor: '#0a0a0f',
-  },
-  tierBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#334155',
-  },
-  chipList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  chip: {
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#12121a',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  chipText: { color: '#64748b', fontSize: 12 },
-  reqStepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    overflow: 'hidden',
-  },
-  stepBtn: {
-    width: 32,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#12121a',
-  },
-  stepBtnText: { color: '#a855f7', fontSize: 18, fontWeight: '300', lineHeight: 20 },
-  stepValue: {
-    minWidth: 32,
-    textAlign: 'center',
-    color: '#e2e8f0',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  removeBtn: { padding: 2 },
-  addReqBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-  },
-  addReqText: { color: '#7c3aed', fontSize: 13, fontWeight: '600' },
-  saveBtn: {
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  saveBtnDisabled: { backgroundColor: '#1e1e2e' },
-  saveBtnText: { color: '#0a0a0f', fontSize: 15, fontWeight: '700' },
-  saveBtnTextDisabled: { color: '#334155' },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: theme.bgPage },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+      backgroundColor: theme.bgCard,
+    },
+    heading: { color: theme.textPrimary, fontSize: 18, fontWeight: '700' },
+    closeBtn: { padding: 4 },
+    content: { padding: 16, gap: 20, paddingBottom: 40 },
+    preview: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      borderWidth: 1,
+      borderRadius: 12,
+      padding: 14,
+    },
+    previewIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    previewName: { fontSize: 18, fontWeight: '700' },
+    field: { gap: 8 },
+    label: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+    },
+    optional: { color: theme.textTertiary, fontWeight: '500', textTransform: 'none' },
+    input: {
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      color: theme.textPrimary,
+      fontSize: 14,
+    },
+    colorRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    colorSwatch: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    colorSwatchSelected: {
+      borderWidth: 3,
+      borderColor: theme.textPrimary,
+    },
+    iconPickerBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      borderWidth: 1,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    iconPickerPreview: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconPickerLabel: {
+      flex: 1,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    reqBlock: { gap: 6, marginBottom: 6 },
+    reqTypeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    reqTypePills: {
+      flex: 1,
+      flexDirection: 'row',
+      gap: 4,
+    },
+    typePill: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 5,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.bgPage,
+    },
+    typePillActive: {
+      borderColor: '#7c3aed55',
+      backgroundColor: '#7c3aed22',
+    },
+    typePillText: {
+      color: theme.textDisabled,
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    typePillTextActive: {
+      color: '#a855f7',
+    },
+    reqRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    reqTextInput: { flex: 1 },
+    reqStaticLabel: {
+      flex: 1,
+      color: theme.textMuted,
+      fontSize: 13,
+      fontStyle: 'italic',
+      paddingHorizontal: 4,
+    },
+    questsFields: {
+      gap: 8,
+      paddingLeft: 4,
+    },
+    questsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 8,
+    },
+    questsFieldLabel: {
+      color: theme.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+      width: 60,
+    },
+    tierBadgeRow: {
+      flex: 1,
+      flexDirection: 'row',
+      gap: 5,
+      justifyContent: 'flex-end',
+    },
+    tierBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.bgPage,
+    },
+    tierBadgeText: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: theme.textTertiary,
+    },
+    chipList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    chip: {
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.textTertiary,
+      backgroundColor: theme.bgCard,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    chipText: { color: theme.textMuted, fontSize: 12 },
+    reqStepper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      overflow: 'hidden',
+    },
+    stepBtn: {
+      width: 32,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.bgCard,
+    },
+    stepBtnText: { color: '#a855f7', fontSize: 18, fontWeight: '300', lineHeight: 20 },
+    stepValue: {
+      minWidth: 32,
+      textAlign: 'center',
+      color: theme.textPrimary,
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    removeBtn: { padding: 2 },
+    addReqBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingVertical: 8,
+    },
+    addReqText: { color: '#7c3aed', fontSize: 13, fontWeight: '600' },
+    saveBtn: {
+      paddingVertical: 14,
+      borderRadius: 10,
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    saveBtnDisabled: { backgroundColor: theme.borderDefault },
+    saveBtnText: { color: theme.bgPage, fontSize: 15, fontWeight: '700' },
+    saveBtnTextDisabled: { color: theme.textTertiary },
+  });
+}

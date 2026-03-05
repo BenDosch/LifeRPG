@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { ShopItemForm } from '../../src/components/forms/ShopItemForm';
 import { useShopStore } from '../../src/store/shopStore';
 import { ConfirmDialog } from '../../src/components/shared/ConfirmDialog';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { Theme } from '../../src/theme';
 
 export default function ShopItemFormModal() {
   const router = useRouter();
   const { itemId } = useLocalSearchParams<{ itemId?: string }>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const editItem = useShopStore((s) =>
     itemId ? s.items.find((i) => i.id === itemId) ?? null : null
@@ -46,7 +50,7 @@ export default function ShopItemFormModal() {
             </TouchableOpacity>
           )}
           <TouchableOpacity onPress={handleCancel} style={styles.closeBtn}>
-            <Ionicons name="close" size={24} color="#64748b" />
+            <Ionicons name="close" size={24} color={theme.textMuted} />
           </TouchableOpacity>
         </View>
       </View>
@@ -73,30 +77,32 @@ export default function ShopItemFormModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#12121a',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-  },
-  title: {
-    color: '#e2e8f0',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  deleteBtn: { padding: 4 },
-  closeBtn: { padding: 4 },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.bgCard,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+    },
+    title: {
+      color: theme.textPrimary,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    deleteBtn: { padding: 4 },
+    closeBtn: { padding: 4 },
+  });
+}

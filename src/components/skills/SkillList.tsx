@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuestStore } from '../../store/questStore';
 import { useShallow } from 'zustand/react/shallow';
 import { IconPickerModal, DEFAULT_SKILL_COLOR } from './IconPickerModal';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface SkillStat {
   name: string;
@@ -16,6 +18,9 @@ interface SkillStat {
 const XP_PER_LEVEL = 100;
 
 export function SkillList() {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const { log, quests } = useQuestStore(useShallow((s) => ({ log: s.log, quests: s.quests })));
   const { skillIcons, skillColors, standaloneSkills, setSkillIcon, setSkillColor, addStandaloneSkill, renameSkill, deleteSkill } = useQuestStore(
     useShallow((s) => ({
@@ -82,7 +87,7 @@ export function SkillList() {
         value={newSkillName}
         onChangeText={setNewSkillName}
         placeholder="Skill name..."
-        placeholderTextColor="#475569"
+        placeholderTextColor={theme.textDisabled}
         autoFocus
         returnKeyType="done"
         onSubmitEditing={handleConfirmAdd}
@@ -92,13 +97,13 @@ export function SkillList() {
         onPress={handleConfirmAdd}
         disabled={!newSkillName.trim()}
       >
-        <Ionicons name="checkmark" size={18} color={newSkillName.trim() ? '#a855f7' : '#334155'} />
+        <Ionicons name="checkmark" size={18} color={newSkillName.trim() ? '#a855f7' : theme.textTertiary} />
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.addCancelBtn}
         onPress={() => { setNewSkillName(''); setAdding(false); }}
       >
-        <Ionicons name="close" size={18} color="#475569" />
+        <Ionicons name="close" size={18} color={theme.textDisabled} />
       </TouchableOpacity>
     </View>
   );
@@ -115,7 +120,7 @@ export function SkillList() {
         {addInputRow}
         {!adding && (
           <View style={styles.empty}>
-            <Ionicons name="flash-outline" size={48} color="#1e1e2e" />
+            <Ionicons name="flash-outline" size={48} color={theme.borderDefault} />
             <Text style={styles.emptyText}>No skills yet</Text>
             <Text style={styles.emptySubtext}>
               Complete quests with skills, or add one above
@@ -145,6 +150,8 @@ export function SkillList() {
             icon={(skillIcons[item.name] as keyof typeof Ionicons.glyphMap) ?? null}
             color={skillColors[item.name] ?? null}
             onPressIcon={() => setPickerSkill(item.name)}
+            theme={theme}
+            styles={styles}
           />
         )}
         removeClippedSubviews={Platform.OS !== 'web'}
@@ -175,11 +182,15 @@ function SkillRow({
   icon,
   color,
   onPressIcon,
+  theme,
+  styles,
 }: {
   item: SkillStat;
   icon: keyof typeof Ionicons.glyphMap | null;
   color: string | null;
   onPressIcon: () => void;
+  theme: Theme;
+  styles: ReturnType<typeof getStyles>;
 }) {
   const progressPct = item.progress / XP_PER_LEVEL;
   const activeColor = color ?? DEFAULT_SKILL_COLOR;
@@ -193,7 +204,7 @@ function SkillRow({
           styles.badge,
           hasBadge
             ? { borderColor: activeColor + '66', backgroundColor: activeColor + '22' }
-            : { borderColor: '#1e1e2e', backgroundColor: '#0d0d14' },
+            : { borderColor: theme.borderDefault, backgroundColor: theme.bgDeep },
         ]}
         onPress={onPressIcon}
         activeOpacity={0.7}
@@ -201,7 +212,7 @@ function SkillRow({
         {icon ? (
           <Ionicons name={icon} size={22} color={activeColor} />
         ) : (
-          <Ionicons name="add" size={18} color="#334155" />
+          <Ionicons name="add" size={18} color={theme.textTertiary} />
         )}
         <Text style={[styles.levelValue, hasBadge && { color: activeColor + 'cc' }]}>
           {item.level}
@@ -225,118 +236,120 @@ function SkillRow({
   );
 }
 
-const styles = StyleSheet.create({
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    padding: 40,
-  },
-  emptyText: { color: '#475569', fontSize: 16, fontWeight: '600' },
-  emptySubtext: { color: '#334155', fontSize: 13, textAlign: 'center' },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    gap: 14,
-  },
-  badge: {
-    width: 48,
-    height: 52,
-    borderRadius: 10,
-    backgroundColor: '#0d0d14',
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-  },
-  levelValue: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  info: { flex: 1, gap: 4 },
-  nameRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  skillName: { color: '#e2e8f0', fontSize: 15, fontWeight: '600' },
-  xpText: { color: '#7c3aed', fontSize: 12, fontWeight: '700' },
-  barTrack: {
-    height: 6,
-    backgroundColor: '#1e1e2e',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  progressLabel: { color: '#475569', fontSize: 11 },
-  separator: { height: 1, backgroundColor: '#1e1e2e', marginHorizontal: 16 },
-  emptyWrapper: { flex: 1 },
-  listHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-  },
-  addFab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: '#7c3aed18',
-    borderWidth: 1,
-    borderColor: '#7c3aed44',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  addFabText: { color: '#a855f7', fontSize: 13, fontWeight: '600' },
-  addRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  addInput: {
-    flex: 1,
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#7c3aed',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    color: '#e2e8f0',
-    fontSize: 14,
-  },
-  addConfirmBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#7c3aed44',
-    backgroundColor: '#7c3aed18',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addConfirmBtnDisabled: {
-    borderColor: '#1e1e2e',
-    backgroundColor: 'transparent',
-  },
-  addCancelBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    empty: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      padding: 40,
+    },
+    emptyText: { color: theme.textDisabled, fontSize: 16, fontWeight: '600' },
+    emptySubtext: { color: theme.textTertiary, fontSize: 13, textAlign: 'center' },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      gap: 14,
+    },
+    badge: {
+      width: 48,
+      height: 52,
+      borderRadius: 10,
+      backgroundColor: theme.bgDeep,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 2,
+    },
+    levelValue: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    info: { flex: 1, gap: 4 },
+    nameRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+    },
+    skillName: { color: theme.textPrimary, fontSize: 15, fontWeight: '600' },
+    xpText: { color: '#7c3aed', fontSize: 12, fontWeight: '700' },
+    barTrack: {
+      height: 6,
+      backgroundColor: theme.borderDefault,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: '100%',
+      borderRadius: 3,
+    },
+    progressLabel: { color: theme.textDisabled, fontSize: 11 },
+    separator: { height: 1, backgroundColor: theme.borderDefault, marginHorizontal: 16 },
+    emptyWrapper: { flex: 1 },
+    listHeader: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+    },
+    addFab: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      alignSelf: 'flex-start',
+      backgroundColor: '#7c3aed18',
+      borderWidth: 1,
+      borderColor: '#7c3aed44',
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    addFabText: { color: '#a855f7', fontSize: 13, fontWeight: '600' },
+    addRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+    },
+    addInput: {
+      flex: 1,
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#7c3aed',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      color: theme.textPrimary,
+      fontSize: 14,
+    },
+    addConfirmBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#7c3aed44',
+      backgroundColor: '#7c3aed18',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addConfirmBtnDisabled: {
+      borderColor: theme.borderDefault,
+      backgroundColor: 'transparent',
+    },
+    addCancelBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
+}

@@ -1,4 +1,5 @@
 import React, { useRef, useCallback } from 'react';
+import { useTheme } from '../../theme/ThemeContext';
 
 interface ArcSliderProps {
   value: number;
@@ -31,6 +32,7 @@ function angleToValue(angle: number): number {
 }
 
 export function ArcSlider({ value, onValueChange, color, label, getLabel }: ArcSliderProps) {
+  const theme = useTheme();
   const svgRef = useRef<SVGSVGElement>(null);
   const dragging = useRef(false);
 
@@ -73,7 +75,7 @@ export function ArcSlider({ value, onValueChange, color, label, getLabel }: ArcS
       <path
         d={bgArc}
         fill="none"
-        stroke="#1e1e2e"
+        stroke={theme.borderDefault}
         strokeWidth={STROKE_WIDTH}
         strokeLinecap="round"
       />
@@ -113,7 +115,7 @@ export function ArcSlider({ value, onValueChange, color, label, getLabel }: ArcS
         x={CX}
         y={H - 4}
         textAnchor="middle"
-        fill="#475569"
+        fill={theme.textDisabled}
         fontSize="9"
         fontWeight="600"
         letterSpacing="0.5"

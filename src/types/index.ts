@@ -90,6 +90,7 @@ export interface Character {
   dailyWaterServings: number;   // number of servings = 100%; 1 serving = 8oz or 240ml
   energyDecayEnabled: boolean;  // if false, energy only changes via quest costs
   energyMinutesPerDay: number;  // total minutes for energy to drain from 100% to 0%
+  colorScheme?: 'dark' | 'light';
 }
 
 export interface LogEntry {

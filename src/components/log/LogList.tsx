@@ -5,6 +5,8 @@ import { useQuestStore } from '../../store/questStore';
 import { getTierColor, getTierLabel, getUrgencyLabel, LogEntry } from '../../types';
 import { formatDate, groupByDate } from '../../utils/date';
 import { SkillChip } from '../shared/SkillChip';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 type ListItem =
   | { type: 'header'; date: string; count: number; totalXP: number }
@@ -14,6 +16,9 @@ export function LogList() {
   const log = useQuestStore((s) => s.log);
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set());
   const [initialized, setInitialized] = useState(false);
+
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const sections = useMemo(() => {
     const grouped = groupByDate(log);
@@ -57,7 +62,7 @@ export function LogList() {
   if (sections.length === 0) {
     return (
       <View style={styles.empty}>
-        <Ionicons name="time-outline" size={48} color="#1e1e2e" />
+        <Ionicons name="time-outline" size={48} color={theme.borderDefault} />
         <Text style={styles.emptyText}>No history yet</Text>
         <Text style={styles.emptySubtext}>Completed quests appear here</Text>
       </View>
@@ -74,11 +79,11 @@ export function LogList() {
       ListHeaderComponent={
         <View style={styles.controls}>
           <TouchableOpacity style={styles.controlBtn} onPress={() => setExpandedDates(new Set(allDates))}>
-            <Ionicons name="chevron-down" size={13} color="#64748b" />
+            <Ionicons name="chevron-down" size={13} color={theme.textMuted} />
             <Text style={styles.controlText}>Expand all</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.controlBtn} onPress={() => setExpandedDates(new Set())}>
-            <Ionicons name="chevron-up" size={13} color="#64748b" />
+            <Ionicons name="chevron-up" size={13} color={theme.textMuted} />
             <Text style={styles.controlText}>Collapse all</Text>
           </TouchableOpacity>
         </View>
@@ -95,7 +100,7 @@ export function LogList() {
               <Ionicons
                 name={expanded ? 'chevron-down' : 'chevron-forward'}
                 size={14}
-                color="#475569"
+                color={theme.textDisabled}
               />
               <Text style={styles.sectionDate}>{formatDate(item.date)}</Text>
               <View style={styles.sectionMeta}>
@@ -139,109 +144,111 @@ export function LogList() {
   );
 }
 
-const styles = StyleSheet.create({
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    padding: 40,
-  },
-  emptyText: { color: '#475569', fontSize: 16, fontWeight: '600' },
-  emptySubtext: { color: '#334155', fontSize: 13, textAlign: 'center' },
-  controls: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-  },
-  controlBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    backgroundColor: '#12121a',
-  },
-  controlText: { color: '#64748b', fontSize: 12, fontWeight: '600' },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#0d0d14',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-  },
-  sectionDate: {
-    flex: 1,
-    color: '#94a3b8',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  sectionMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  sectionCount: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  sectionXpBadge: {
-    backgroundColor: '#7c3aed18',
-    borderRadius: 5,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: '#7c3aed33',
-  },
-  sectionXpText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
-  entry: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#0f0f18',
-  },
-  diffDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  entryContent: { flex: 1 },
-  entryName: {
-    color: '#e2e8f0',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  entryMeta: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 2,
-    flexWrap: 'wrap',
-  },
-  metaLabel: { color: '#64748b', fontSize: 11 },
-  diffLabel: { fontSize: 11, fontWeight: '600' },
-  metaSep: { color: '#334155', fontSize: 11 },
-  skillsRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 },
-  skillText: { color: '#7c3aed', fontSize: 11 },
-  xpBadge: {
-    backgroundColor: '#7c3aed22',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  xpText: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    empty: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      padding: 40,
+    },
+    emptyText: { color: theme.textDisabled, fontSize: 16, fontWeight: '600' },
+    emptySubtext: { color: theme.textTertiary, fontSize: 13, textAlign: 'center' },
+    controls: {
+      flexDirection: 'row',
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+    },
+    controlBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.bgCard,
+    },
+    controlText: { color: theme.textMuted, fontSize: 12, fontWeight: '600' },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: theme.bgDeep,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+    },
+    sectionDate: {
+      flex: 1,
+      color: theme.textSecondary,
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+    },
+    sectionMeta: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    sectionCount: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      fontWeight: '500',
+    },
+    sectionXpBadge: {
+      backgroundColor: '#7c3aed18',
+      borderRadius: 5,
+      paddingHorizontal: 7,
+      paddingVertical: 2,
+      borderWidth: 1,
+      borderColor: '#7c3aed33',
+    },
+    sectionXpText: { color: '#a855f7', fontSize: 11, fontWeight: '700' },
+    entry: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderSubtle,
+    },
+    diffDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    entryContent: { flex: 1 },
+    entryName: {
+      color: theme.textPrimary,
+      fontSize: 14,
+      fontWeight: '500',
+    },
+    entryMeta: {
+      flexDirection: 'row',
+      gap: 8,
+      marginTop: 2,
+      flexWrap: 'wrap',
+    },
+    metaLabel: { color: theme.textMuted, fontSize: 11 },
+    diffLabel: { fontSize: 11, fontWeight: '600' },
+    metaSep: { color: theme.textTertiary, fontSize: 11 },
+    skillsRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 },
+    skillText: { color: '#7c3aed', fontSize: 11 },
+    xpBadge: {
+      backgroundColor: '#7c3aed22',
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    xpText: { color: '#a855f7', fontSize: 12, fontWeight: '700' },
+  });
+}

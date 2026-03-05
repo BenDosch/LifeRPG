@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
 
 interface SliderInputProps {
   value: number; // 1–100
@@ -8,6 +9,8 @@ interface SliderInputProps {
 }
 
 export function SliderInput({ value, onValueChange, color = '#7c3aed' }: SliderInputProps) {
+  const theme = useTheme();
+
   return (
     <View style={{ paddingVertical: 4 }}>
       <input

@@ -23,11 +23,14 @@ import { IconPickerModal } from '../../src/components/skills/IconPickerModal';
 import { getClassDef } from '../../src/data/heroClasses';
 import { getTier } from '../../src/types';
 import { useUIStore } from '../../src/store/uiStore';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { Theme, resolveIconColor } from '../../src/theme';
 
 export default function CharacterScreen() {
   const {
     name, heroClass, customClasses, points, gold, unlockedClasses,
     waterUnit, dailyWaterServings, energyMinutesPerDay, energyDecayEnabled,
+    colorScheme, setColorScheme,
     setName, setHeroClass, setWaterUnit, setDailyWaterServings, setEnergyMinutesPerDay, setEnergyDecayEnabled,
   } = useCharacterStore(
     useShallow((s) => ({
@@ -41,6 +44,8 @@ export default function CharacterScreen() {
       dailyWaterServings: s.dailyWaterServings,
       energyMinutesPerDay: s.energyMinutesPerDay,
       energyDecayEnabled: s.energyDecayEnabled,
+      colorScheme: s.colorScheme,
+      setColorScheme: s.setColorScheme,
       setName: s.setName,
       setHeroClass: s.setHeroClass,
       setWaterUnit: s.setWaterUnit,
@@ -49,6 +54,9 @@ export default function CharacterScreen() {
       setEnergyDecayEnabled: s.setEnergyDecayEnabled,
     }))
   );
+
+  const theme = useTheme();
+
   const classDef = getClassDef(heroClass, customClasses);
   const classColor = classDef?.color ?? '#a855f7';
   const level = useLevel();
@@ -132,6 +140,7 @@ export default function CharacterScreen() {
     setEditingName(false);
   };
 
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   return (
     <View style={styles.safe}>
@@ -167,7 +176,7 @@ export default function CharacterScreen() {
                 onPress={() => { setNameInput(name); setEditingName(true); }}
               >
                 <Text style={styles.fieldText}>{name}</Text>
-                <Ionicons name="pencil-outline" size={14} color="#475569" />
+                <Ionicons name="pencil-outline" size={14} color={theme.textDisabled} />
               </TouchableOpacity>
             )}
           </View>
@@ -192,7 +201,7 @@ export default function CharacterScreen() {
                     <Text style={styles.unlockCountText}>{newlyUnlockableCount}</Text>
                   </View>
                 )}
-                <Ionicons name="hammer" size={12} color="#475569" />
+                <Ionicons name="hammer" size={12} color={theme.textDisabled} />
                 <Text style={styles.manageClassesText}>Manage classes</Text>
               </View>
             </TouchableOpacity>
@@ -248,7 +257,7 @@ export default function CharacterScreen() {
                 style={styles.manageClassesBtn}
                 onPress={() => setAddingSkill((v) => !v)}
               >
-                <Ionicons name={addingSkill ? 'close' : 'add'} size={12} color={addingSkill ? '#a855f7' : '#475569'} />
+                <Ionicons name={addingSkill ? 'close' : 'add'} size={12} color={addingSkill ? '#a855f7' : theme.textDisabled} />
                 <Text style={[styles.manageClassesText, addingSkill && { color: '#a855f7' }]}>
                   {addingSkill ? 'Cancel' : 'New Skill'}
                 </Text>
@@ -262,7 +271,7 @@ export default function CharacterScreen() {
                   value={newSkillName}
                   onChangeText={setNewSkillName}
                   placeholder="Skill name..."
-                  placeholderTextColor="#475569"
+                  placeholderTextColor={theme.textDisabled}
                   autoFocus
                   returnKeyType="done"
                   onSubmitEditing={handleConfirmAddSkill}
@@ -272,13 +281,13 @@ export default function CharacterScreen() {
                   onPress={handleConfirmAddSkill}
                   disabled={!newSkillName.trim()}
                 >
-                  <Ionicons name="checkmark" size={16} color={newSkillName.trim() ? '#a855f7' : '#334155'} />
+                  <Ionicons name="checkmark" size={16} color={newSkillName.trim() ? '#a855f7' : theme.textTertiary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.skillAddCancelBtn}
                   onPress={() => { setNewSkillName(''); setAddingSkill(false); }}
                 >
-                  <Ionicons name="close" size={16} color="#475569" />
+                  <Ionicons name="close" size={16} color={theme.textDisabled} />
                 </TouchableOpacity>
               </View>
             )}
@@ -289,6 +298,7 @@ export default function CharacterScreen() {
 
             {skillStats.map((stat, index) => {
               const color = skillColors[stat.name] ?? '#a855f7';
+              const resolvedColor = resolveIconColor(color, theme.colorScheme);
               const icon = skillIcons[stat.name] as keyof typeof Ionicons.glyphMap | undefined;
               return (
                 <View key={stat.name}>
@@ -298,24 +308,24 @@ export default function CharacterScreen() {
                       style={[
                         styles.skillBadge,
                         icon
-                          ? { borderColor: color + '66', backgroundColor: color + '22' }
-                          : { borderColor: '#1e1e2e', backgroundColor: '#0d0d14' },
+                          ? { borderColor: resolvedColor + '66', backgroundColor: resolvedColor + '22' }
+                          : { borderColor: theme.borderDefault, backgroundColor: theme.bgDeep },
                       ]}
                       onPress={() => setPickerSkill(stat.name)}
                     >
                       {icon
-                        ? <Ionicons name={icon} size={22} color={color} />
-                        : <Ionicons name="add" size={18} color="#334155" />
+                        ? <Ionicons name={icon} size={22} color={resolvedColor} />
+                        : <Ionicons name="add" size={18} color={theme.textTertiary} />
                       }
-                      <Text style={[styles.skillLevel, icon && { color: color + 'cc' }]}>{stat.level}</Text>
+                      <Text style={[styles.skillLevel, icon && { color: resolvedColor + 'cc' }]}>{stat.level}</Text>
                     </TouchableOpacity>
                     <View style={styles.skillInfo}>
                       <View style={styles.skillNameRow}>
                         <Text style={styles.skillName}>{stat.name}</Text>
-                        <Text style={[styles.skillXp, { color }]}>{stat.xp} XP</Text>
+                        <Text style={[styles.skillXp, { color: resolvedColor }]}>{stat.xp} XP</Text>
                       </View>
                       <View style={styles.skillBarTrack}>
-                        <View style={[styles.skillBarFill, { width: `${stat.progress}%` as any, backgroundColor: color }]} />
+                        <View style={[styles.skillBarFill, { width: `${stat.progress}%` as any, backgroundColor: resolvedColor }]} />
                       </View>
                       <Text style={styles.skillProgressLabel}>
                         {stat.progress} / 100 to next level · {stat.count} active quest{stat.count !== 1 ? 's' : ''}
@@ -354,8 +364,8 @@ export default function CharacterScreen() {
             <Switch
               value={energyDecayEnabled}
               onValueChange={setEnergyDecayEnabled}
-              trackColor={{ false: '#1e1e2e', true: '#4ade8044' }}
-              thumbColor={energyDecayEnabled ? '#4ade80' : '#334155'}
+              trackColor={{ false: theme.borderMuted, true: '#4ade8066' }}
+              thumbColor={energyDecayEnabled ? '#4ade80' : '#fff'}
             />
           </View>
 
@@ -453,6 +463,21 @@ export default function CharacterScreen() {
           <Text style={styles.settingHint}>
             1 serving = {waterUnit === 'imperial' ? '8oz' : '240ml'} · {dailyWaterServings} servings per day
           </Text>
+
+          <View style={styles.settingDivider} />
+          {/* Theme */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabelCol}>
+              <Text style={styles.fieldLabel}>Light Mode</Text>
+              <Text style={styles.settingHint}>Switch between dark and light appearance</Text>
+            </View>
+            <Switch
+              value={colorScheme === 'light'}
+              onValueChange={(v) => setColorScheme(v ? 'light' : 'dark')}
+              trackColor={{ false: theme.borderMuted, true: '#4ade8066' }}
+              thumbColor={colorScheme === 'light' ? '#4ade80' : '#fff'}
+            />
+          </View>
         </View>
 
         {/* Danger zone */}
@@ -521,6 +546,8 @@ function StatCard({
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
 }) {
+  const theme = useTheme();
+  const statStyles = useMemo(() => getStatStyles(theme), [theme]);
   return (
     <View style={statStyles.card}>
       <Ionicons name={icon} size={20} color={color} />
@@ -530,358 +557,362 @@ function StatCard({
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#0a0a0f' },
-  scroll: { flex: 1 },
-  content: { padding: 16, gap: 12, paddingBottom: 32 },
-  heading: {
-    color: '#e2e8f0',
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  sectionHeading: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginTop: 8,
-  },
-  card: {
-    backgroundColor: '#12121a',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    padding: 16,
-    gap: 12,
-  },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#7c3aed22',
-    borderWidth: 2,
-    borderColor: '#7c3aed44',
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-  },
-  field: { gap: 4 },
-  fieldLabelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  fieldLabel: {
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  fieldValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  fieldText: { color: '#e2e8f0', fontSize: 16, fontWeight: '600' },
-  classNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  editRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  editInput: {
-    flex: 1,
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#7c3aed',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    color: '#e2e8f0',
-    fontSize: 15,
-  },
-  saveIconBtn: { padding: 4 },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  unlockedBadgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  unlockedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  unlockedBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  unlockedBadgeLv: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  manageClassesBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  manageClassesText: {
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  unlockCountBadge: {
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#a855f7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  unlockCountText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '800',
-    lineHeight: 14,
-  },
-  classLevelBadge: {
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginLeft: 6,
-  },
-  classLevelText: { fontSize: 11, fontWeight: '700' },
-  classXpBar: {
-    height: 4,
-    backgroundColor: '#1e1e2e',
-    borderRadius: 2,
-    overflow: 'hidden',
-    marginTop: 4,
-  },
-  classXpFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  classXpLabel: {
-    color: '#64748b',
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  settingHint: {
-    color: '#475569',
-    fontSize: 11,
-    marginTop: 2,
-  },
-  unitToggle: {
-    flexDirection: 'row',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    overflow: 'hidden',
-  },
-  unitBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    backgroundColor: '#0a0a0f',
-  },
-  unitBtnActive: {
-    backgroundColor: '#0ea5e922',
-  },
-  unitBtnText: {
-    color: '#475569',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  unitBtnTextActive: {
-    color: '#0ea5e9',
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  durationStepper: {
-    flexDirection: 'column',
-    gap: 6,
-    alignItems: 'flex-end',
-  },
-  stepBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#0ea5e933',
-    backgroundColor: '#0ea5e911',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepValue: {
-    color: '#e2e8f0',
-    fontSize: 16,
-    fontWeight: '700',
-    minWidth: 64,
-    textAlign: 'center',
-  },
-  stepUnit: {
-    color: '#475569',
-    fontSize: 12,
-    fontWeight: '400',
-  },
-  stepBtnAmber: {
-    borderColor: '#4ade8033',
-    backgroundColor: '#4ade8011',
-  },
-  settingDivider: {
-    height: 1,
-    backgroundColor: '#1e1e2e',
-  },
-  settingLabelCol: {
-    flex: 1,
-    gap: 2,
-  },
-  disabledLabel: {
-    opacity: 0.35,
-  },
-  disabledRow: {
-    opacity: 0.35,
-  },
-  skillAddRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 6,
-  },
-  skillAddInput: {
-    flex: 1,
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#7c3aed',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    color: '#e2e8f0',
-    fontSize: 14,
-  },
-  skillAddConfirmBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#7c3aed44',
-    backgroundColor: '#7c3aed18',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  skillAddConfirmBtnDisabled: {
-    borderColor: '#1e1e2e',
-    backgroundColor: 'transparent',
-  },
-  skillAddCancelBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  skillEmptyText: {
-    color: '#334155',
-    fontSize: 12,
-    marginTop: 8,
-  },
-  skillSeparator: {
-    height: 1,
-    backgroundColor: '#1e1e2e',
-  },
-  skillRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    gap: 12,
-  },
-  skillBadge: {
-    width: 48,
-    height: 52,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-  },
-  skillLevel: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  skillInfo: { flex: 1, gap: 4 },
-  skillNameRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-  },
-  skillName: { color: '#e2e8f0', fontSize: 15, fontWeight: '600' },
-  skillXp: { fontSize: 12, fontWeight: '700' },
-  skillBarTrack: {
-    height: 6,
-    backgroundColor: '#1e1e2e',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  skillBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  skillProgressLabel: { color: '#475569', fontSize: 11 },
-  dangerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dangerText: { color: '#dc2626', fontSize: 14, fontWeight: '600' },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: theme.bgPage },
+    scroll: { flex: 1 },
+    content: { padding: 16, gap: 12, paddingBottom: 32 },
+    heading: {
+      color: theme.textPrimary,
+      fontSize: 22,
+      fontWeight: '700',
+      marginBottom: 4,
+    },
+    sectionHeading: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      marginTop: 8,
+    },
+    card: {
+      backgroundColor: theme.bgCard,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      padding: 16,
+      gap: 12,
+    },
+    avatar: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: '#7c3aed22',
+      borderWidth: 2,
+      borderColor: '#7c3aed44',
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'center',
+    },
+    field: { gap: 4 },
+    fieldLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    fieldLabel: {
+      color: theme.textMuted,
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+    },
+    fieldValue: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    fieldText: { color: theme.textPrimary, fontSize: 16, fontWeight: '600' },
+    classNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    editRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    editInput: {
+      flex: 1,
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#7c3aed',
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      color: theme.textPrimary,
+      fontSize: 15,
+    },
+    saveIconBtn: { padding: 4 },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    unlockedBadgeRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 4,
+    },
+    unlockedBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      borderWidth: 1,
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    unlockedBadgeText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    unlockedBadgeLv: {
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    manageClassesBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    manageClassesText: {
+      color: theme.textMuted,
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    unlockCountBadge: {
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: '#a855f7',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+    },
+    unlockCountText: {
+      color: '#fff',
+      fontSize: 10,
+      fontWeight: '800',
+      lineHeight: 14,
+    },
+    classLevelBadge: {
+      borderWidth: 1,
+      borderRadius: 5,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      marginLeft: 6,
+    },
+    classLevelText: { fontSize: 11, fontWeight: '700' },
+    classXpBar: {
+      height: 4,
+      backgroundColor: theme.borderDefault,
+      borderRadius: 2,
+      overflow: 'hidden',
+      marginTop: 4,
+    },
+    classXpFill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    classXpLabel: {
+      color: theme.textMuted,
+      fontSize: 10,
+      fontWeight: '600',
+      marginTop: 2,
+    },
+    settingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    settingHint: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      marginTop: 2,
+    },
+    unitToggle: {
+      flexDirection: 'row',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      overflow: 'hidden',
+    },
+    unitBtn: {
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      backgroundColor: theme.bgPage,
+    },
+    unitBtnActive: {
+      backgroundColor: '#0ea5e922',
+    },
+    unitBtnText: {
+      color: theme.textDisabled,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    unitBtnTextActive: {
+      color: '#0ea5e9',
+    },
+    stepper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    durationStepper: {
+      flexDirection: 'column',
+      gap: 6,
+      alignItems: 'flex-end',
+    },
+    stepBtn: {
+      width: 30,
+      height: 30,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#0ea5e933',
+      backgroundColor: '#0ea5e911',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stepValue: {
+      color: theme.textPrimary,
+      fontSize: 16,
+      fontWeight: '700',
+      minWidth: 64,
+      textAlign: 'center',
+    },
+    stepUnit: {
+      color: theme.textDisabled,
+      fontSize: 12,
+      fontWeight: '400',
+    },
+    stepBtnAmber: {
+      borderColor: '#4ade8033',
+      backgroundColor: '#4ade8011',
+    },
+    settingDivider: {
+      height: 1,
+      backgroundColor: theme.borderDefault,
+    },
+    settingLabelCol: {
+      flex: 1,
+      gap: 2,
+    },
+    disabledLabel: {
+      opacity: 0.35,
+    },
+    disabledRow: {
+      opacity: 0.35,
+    },
+    skillAddRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 6,
+    },
+    skillAddInput: {
+      flex: 1,
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#7c3aed',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      color: theme.textPrimary,
+      fontSize: 14,
+    },
+    skillAddConfirmBtn: {
+      width: 34,
+      height: 34,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#7c3aed44',
+      backgroundColor: '#7c3aed18',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    skillAddConfirmBtnDisabled: {
+      borderColor: theme.borderDefault,
+      backgroundColor: 'transparent',
+    },
+    skillAddCancelBtn: {
+      width: 34,
+      height: 34,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    skillEmptyText: {
+      color: theme.textTertiary,
+      fontSize: 12,
+      marginTop: 8,
+    },
+    skillSeparator: {
+      height: 1,
+      backgroundColor: theme.borderDefault,
+    },
+    skillRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      gap: 12,
+    },
+    skillBadge: {
+      width: 48,
+      height: 52,
+      borderRadius: 10,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 2,
+    },
+    skillLevel: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    skillInfo: { flex: 1, gap: 4 },
+    skillNameRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+    },
+    skillName: { color: theme.textPrimary, fontSize: 15, fontWeight: '600' },
+    skillXp: { fontSize: 12, fontWeight: '700' },
+    skillBarTrack: {
+      height: 6,
+      backgroundColor: theme.borderDefault,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    skillBarFill: {
+      height: '100%',
+      borderRadius: 3,
+    },
+    skillProgressLabel: { color: theme.textDisabled, fontSize: 11 },
+    dangerBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    dangerText: { color: '#dc2626', fontSize: 14, fontWeight: '600' },
+  });
+}
 
-const statStyles = StyleSheet.create({
-  card: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#0d0d14',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    padding: 12,
-    alignItems: 'center',
-    gap: 4,
-  },
-  value: {
-    color: '#e2e8f0',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  label: {
-    color: '#64748b',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-});
+function getStatStyles(theme: Theme) {
+  return StyleSheet.create({
+    card: {
+      flex: 1,
+      minWidth: '45%',
+      backgroundColor: theme.bgDeep,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      padding: 12,
+      alignItems: 'center',
+      gap: 4,
+    },
+    value: {
+      color: theme.textPrimary,
+      fontSize: 22,
+      fontWeight: '700',
+    },
+    label: {
+      color: theme.textMuted,
+      fontSize: 11,
+      fontWeight: '600',
+    },
+  });
+}

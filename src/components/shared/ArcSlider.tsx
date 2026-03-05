@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { View, PanResponder } from 'react-native';
 import Svg, { Path, Circle, Text as SvgText } from 'react-native-svg';
+import { useTheme } from '../../theme/ThemeContext';
 
 interface ArcSliderProps {
   value: number;
@@ -33,6 +34,8 @@ function angleToValue(angle: number): number {
 }
 
 export function ArcSlider({ value, onValueChange, color, label, getLabel }: ArcSliderProps) {
+  const theme = useTheme();
+
   const progress = (value - 1) / 99;
   const valueAngle = 180 + progress * 180;
 
@@ -73,7 +76,7 @@ export function ArcSlider({ value, onValueChange, color, label, getLabel }: ArcS
         <Path
           d={bgArc}
           fill="none"
-          stroke="#1e1e2e"
+          stroke={theme.borderDefault}
           strokeWidth={STROKE_WIDTH}
           strokeLinecap="round"
         />
@@ -111,7 +114,7 @@ export function ArcSlider({ value, onValueChange, color, label, getLabel }: ArcS
           x={CX}
           y={H - 4}
           textAnchor="middle"
-          fill="#475569"
+          fill={theme.textDisabled}
           fontSize={9}
           fontWeight="600"
           letterSpacing={0.5}

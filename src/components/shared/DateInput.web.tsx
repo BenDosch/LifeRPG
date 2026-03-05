@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface DateInputProps {
   value: string | null; // YYYY-MM-DD or null
@@ -8,9 +10,12 @@ interface DateInputProps {
 }
 
 export function DateInput({ value, onChange }: DateInputProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   return (
     <View style={styles.container}>
-      <Ionicons name="calendar-outline" size={16} color="#475569" />
+      <Ionicons name="calendar-outline" size={16} color={theme.textDisabled} />
       <input
         type="date"
         value={value ?? ''}
@@ -19,7 +24,7 @@ export function DateInput({ value, onChange }: DateInputProps) {
           flex: 1,
           background: 'transparent',
           border: 'none',
-          color: value ? '#e2e8f0' : '#475569',
+          color: value ? theme.textPrimary : theme.textDisabled,
           fontSize: 14,
           outline: 'none',
           colorScheme: 'dark',
@@ -32,23 +37,25 @@ export function DateInput({ value, onChange }: DateInputProps) {
           onPress={() => onChange(null)}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="close-circle" size={16} color="#475569" />
+          <Ionicons name="close-circle" size={16} color={theme.textDisabled} />
         </TouchableOpacity>
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    gap: 4,
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      gap: 4,
+    },
+  });
+}

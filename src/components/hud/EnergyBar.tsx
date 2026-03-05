@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCharacterStore } from '../../store/characterStore';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 function lerpColor(from: string, to: string, t: number): string {
   const p = (h: string, o: number) => parseInt(h.slice(o, o + 2), 16);
@@ -12,6 +14,9 @@ function lerpColor(from: string, to: string, t: number): string {
 }
 
 export function EnergyBar() {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const energy = useCharacterStore((s) => s.energy);
   const fullRest = useCharacterStore((s) => s.fullRest);
   const ratio = Math.min(1, Math.max(0, energy / 100));
@@ -41,54 +46,56 @@ export function EnergyBar() {
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  barArea: { flex: 1, gap: 4 },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  label: {
-    color: '#64748b',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  value: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  track: {
-    height: 4,
-    backgroundColor: '#1e1e2e',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-    width: 152,
-    backgroundColor: '#818cf811',
-    borderWidth: 1,
-    borderColor: '#818cf833',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  btnText: {
-    color: '#818cf8',
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: 'Electrolize-Regular',
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    barArea: { flex: 1, gap: 4 },
+    labelRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    label: {
+      color: theme.textMuted,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    value: {
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    track: {
+      height: 4,
+      backgroundColor: theme.borderDefault,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    btn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 3,
+      width: 152,
+      backgroundColor: '#818cf811',
+      borderWidth: 1,
+      borderColor: '#818cf833',
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    btnText: {
+      color: '#818cf8',
+      fontSize: 11,
+      fontWeight: '700',
+      fontFamily: 'Electrolize-Regular',
+    },
+  });
+}

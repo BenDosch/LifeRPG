@@ -1,5 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { View, StyleSheet, PanResponder, LayoutChangeEvent } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface SliderInputProps {
   value: number; // 1–100
@@ -8,6 +10,9 @@ interface SliderInputProps {
 }
 
 export function SliderInput({ value, onValueChange, color = '#7c3aed' }: SliderInputProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const trackWidth = useRef(1);
 
   const update = (x: number) => {
@@ -43,29 +48,31 @@ export function SliderInput({ value, onValueChange, color = '#7c3aed' }: SliderI
   );
 }
 
-const styles = StyleSheet.create({
-  hitArea: {
-    height: 36,
-    justifyContent: 'center',
-  },
-  track: {
-    height: 6,
-    backgroundColor: '#1e1e2e',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  thumb: {
-    position: 'absolute',
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    marginLeft: -11,
-    top: '50%',
-    marginTop: -11,
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    hitArea: {
+      height: 36,
+      justifyContent: 'center',
+    },
+    track: {
+      height: 6,
+      backgroundColor: theme.borderDefault,
+      borderRadius: 3,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: 3,
+    },
+    thumb: {
+      position: 'absolute',
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 2,
+      marginLeft: -11,
+      top: '50%',
+      marginTop: -11,
+    },
+  });
+}

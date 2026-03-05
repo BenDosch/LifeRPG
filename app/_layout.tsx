@@ -12,6 +12,7 @@ import { QuestCompleteModal } from '../src/components/shared/QuestCompleteModal'
 import { ClassPickerModal } from '../src/components/character/ClassPickerModal';
 import { useUIStore } from '../src/store/uiStore';
 import { useCharacterStore } from '../src/store/characterStore';
+import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 import '../global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -42,29 +43,19 @@ function GlobalClassPicker() {
   );
 }
 
-export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
-    'Electrolize-Regular': require('../assets/fonts/Electrolize-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (fontsLoaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) return null;
+function AppShell() {
+  const theme = useTheme();
+  const colorScheme = useCharacterStore((s) => s.colorScheme);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
+    <>
       <EnergyDecayWatcher />
       <HydrationDecayWatcher />
-      <StatusBar style="light" />
+      <StatusBar style={colorScheme === 'light' ? 'dark' : 'light'} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: '#0a0a0f' },
+          contentStyle: { backgroundColor: theme.bgPage },
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -90,6 +81,29 @@ export default function RootLayout() {
       <QuestCompleteModal />
       <LevelUpModal />
       <GlobalClassPicker />
+    </>
+  );
+}
+
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    'Electrolize-Regular': require('../assets/fonts/Electrolize-Regular.ttf'),
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AppShell />
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

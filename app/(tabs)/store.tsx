@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -15,12 +15,16 @@ import { useCharacterStore } from '../../src/store/characterStore';
 import { ShopItemCard } from '../../src/components/shop/ShopItemCard';
 import { InventoryItemCard } from '../../src/components/shop/InventoryItemCard';
 import { ShopItem } from '../../src/types';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { Theme } from '../../src/theme';
 
 type Tab = 'shop' | 'inventory';
 
 export default function StoreScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('inventory');
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const { items, inventory, purchaseItem } = useShopStore(
     useShallow((s) => ({
@@ -91,7 +95,7 @@ export default function StoreScreen() {
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
           {inventory.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="cube-outline" size={40} color="#1e1e2e" />
+              <Ionicons name="cube-outline" size={40} color={theme.borderDefault} />
               <Text style={styles.emptyText}>Your inventory is empty.</Text>
               <Text style={styles.emptySubText}>Purchase items from the Shop.</Text>
             </View>
@@ -108,116 +112,118 @@ export default function StoreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0a0a0f',
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  heading: {
-    color: '#e2e8f0',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  topRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  goldPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#FFD70011',
-    borderWidth: 1,
-    borderColor: '#FFD70033',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  goldPillText: {
-    color: '#FFD700',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  addCard: {
-    width: 220,
-    height: 110,
-    backgroundColor: '#12121a',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#7c3aed44',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  addCardPlus: {
-    color: '#7c3aed',
-    fontSize: 36,
-    fontWeight: '300',
-    lineHeight: 40,
-  },
-  addCardLabel: {
-    color: '#7c3aed',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  toggle: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginBottom: 12,
-    backgroundColor: '#12121a',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    overflow: 'hidden',
-  },
-  toggleBtn: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  toggleBtnActive: {
-    backgroundColor: '#7c3aed33',
-  },
-  toggleText: {
-    color: '#475569',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  toggleTextActive: {
-    color: '#a855f7',
-  },
-  scroll: { flex: 1 },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingTop: 60,
-    gap: 8,
-  },
-  emptyText: {
-    color: '#475569',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  emptySubText: {
-    color: '#334155',
-    fontSize: 13,
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.bgPage,
+    },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 8,
+    },
+    heading: {
+      color: theme.textPrimary,
+      fontSize: 22,
+      fontWeight: '700',
+    },
+    topRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    goldPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: '#FFD70011',
+      borderWidth: 1,
+      borderColor: '#FFD70033',
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    goldPillText: {
+      color: '#FFD700',
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    addCard: {
+      width: 220,
+      height: 110,
+      backgroundColor: theme.bgCard,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: '#7c3aed44',
+      borderStyle: 'dashed',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+    },
+    addCardPlus: {
+      color: '#7c3aed',
+      fontSize: 36,
+      fontWeight: '300',
+      lineHeight: 40,
+    },
+    addCardLabel: {
+      color: '#7c3aed',
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    toggle: {
+      flexDirection: 'row',
+      marginHorizontal: 16,
+      marginBottom: 12,
+      backgroundColor: theme.bgCard,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      overflow: 'hidden',
+    },
+    toggleBtn: {
+      flex: 1,
+      paddingVertical: 8,
+      alignItems: 'center',
+    },
+    toggleBtnActive: {
+      backgroundColor: '#7c3aed33',
+    },
+    toggleText: {
+      color: theme.textDisabled,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    toggleTextActive: {
+      color: '#a855f7',
+    },
+    scroll: { flex: 1 },
+    scrollContent: {
+      padding: 16,
+      paddingBottom: 32,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    emptyState: {
+      alignItems: 'center',
+      paddingTop: 60,
+      gap: 8,
+    },
+    emptyText: {
+      color: theme.textDisabled,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    emptySubText: {
+      color: theme.textTertiary,
+      fontSize: 13,
+    },
+  });
+}
