@@ -10,6 +10,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useShallow } from 'zustand/react/shallow';
 import { useQuestStore } from '../../store/questStore';
 import { SkillChip } from '../shared/SkillChip';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface SkillInputProps {
   skills: string[];
@@ -18,6 +20,9 @@ interface SkillInputProps {
 }
 
 export function SkillInput({ skills, onChange, onPendingChange }: SkillInputProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const [inputValue, setInputValue] = useState('');
   const allSkills = useQuestStore(useShallow((s) => s.getAllSkills()));
 
@@ -72,7 +77,7 @@ export function SkillInput({ skills, onChange, onPendingChange }: SkillInputProp
           value={inputValue}
           onChangeText={handleInputChange}
           placeholder="Add skill..."
-          placeholderTextColor="#475569"
+          placeholderTextColor={theme.textDisabled}
           onSubmitEditing={() => addSkill(inputValue)}
           returnKeyType="done"
           blurOnSubmit={false}
@@ -105,49 +110,51 @@ export function SkillInput({ skills, onChange, onPendingChange }: SkillInputProp
   );
 }
 
-const styles = StyleSheet.create({
-  container: { gap: 8 },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  tag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#7c3aed22',
-    borderWidth: 1,
-    borderColor: '#7c3aed44',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  tagText: { color: '#a855f7', fontSize: 12 },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    paddingHorizontal: 10,
-  },
-  input: {
-    flex: 1,
-    color: '#e2e8f0',
-    fontSize: 14,
-    paddingVertical: 8,
-  },
-  addBtn: { padding: 4 },
-  chipList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  chip: {
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
-    backgroundColor: '#12121a',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  chipText: { color: '#64748b', fontSize: 12 },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: { gap: 8 },
+    tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+    tag: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: '#7c3aed22',
+      borderWidth: 1,
+      borderColor: '#7c3aed44',
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    tagText: { color: '#a855f7', fontSize: 12 },
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      paddingHorizontal: 10,
+    },
+    input: {
+      flex: 1,
+      color: theme.textPrimary,
+      fontSize: 14,
+      paddingVertical: 8,
+    },
+    addBtn: { padding: 4 },
+    chipList: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+    },
+    chip: {
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.textTertiary,
+      backgroundColor: theme.bgCard,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+    },
+    chipText: { color: theme.textMuted, fontSize: 12 },
+  });
+}

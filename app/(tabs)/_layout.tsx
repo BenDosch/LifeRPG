@@ -1,36 +1,48 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { HudBar } from '../../src/components/hud/HudBar';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 function TabIcon({
   name,
   focused,
+  color,
+  inactiveColor,
 }: {
   name: keyof typeof Ionicons.glyphMap;
   focused: boolean;
+  color: string;
+  inactiveColor: string;
 }) {
   return (
     <Ionicons
       name={focused ? name : (`${name}-outline` as keyof typeof Ionicons.glyphMap)}
       size={22}
-      color={focused ? '#a855f7' : '#475569'}
+      color={focused ? color : inactiveColor}
     />
   );
 }
 
 export default function TabsLayout() {
+  const theme = useTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: true,
         header: () => <HudBar />,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: {
+          backgroundColor: theme.bgCard,
+          borderTopColor: theme.borderDefault,
+          borderTopWidth: 1,
+          height: 60,
+          paddingBottom: 8,
+        },
         tabBarActiveTintColor: '#a855f7',
-        tabBarInactiveTintColor: '#475569',
-        tabBarLabelStyle: styles.tabLabel,
-        contentStyle: { backgroundColor: '#0a0a0f' },
+        tabBarInactiveTintColor: theme.textDisabled,
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        contentStyle: { backgroundColor: theme.bgPage },
       }}
     >
       <Tabs.Screen
@@ -38,7 +50,7 @@ export default function TabsLayout() {
         options={{
           title: 'Quests',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="folder" focused={focused} />
+            <TabIcon name="folder" focused={focused} color="#a855f7" inactiveColor={theme.textDisabled} />
           ),
         }}
       />
@@ -51,7 +63,7 @@ export default function TabsLayout() {
         options={{
           title: 'Inventory',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="bag" focused={focused} />
+            <TabIcon name="bag" focused={focused} color="#a855f7" inactiveColor={theme.textDisabled} />
           ),
         }}
       />
@@ -60,24 +72,10 @@ export default function TabsLayout() {
         options={{
           title: 'Character',
           tabBarIcon: ({ focused }) => (
-            <TabIcon name="person" focused={focused} />
+            <TabIcon name="person" focused={focused} color="#a855f7" inactiveColor={theme.textDisabled} />
           ),
         }}
       />
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: '#12121a',
-    borderTopColor: '#1e1e2e',
-    borderTopWidth: 1,
-    height: 60,
-    paddingBottom: 8,
-  },
-  tabLabel: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-});

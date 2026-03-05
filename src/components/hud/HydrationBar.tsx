@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useShallow } from 'zustand/react/shallow';
 import { useCharacterStore } from '../../store/characterStore';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 function lerpColor(from: string, to: string, t: number): string {
   const p = (h: string, o: number) => parseInt(h.slice(o, o + 2), 16);
@@ -13,6 +15,9 @@ function lerpColor(from: string, to: string, t: number): string {
 }
 
 export function HydrationBar() {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const { hydration, drinkWater, waterUnit } = useCharacterStore(
     useShallow((s) => ({
       hydration: s.hydration,
@@ -75,75 +80,77 @@ export function HydrationBar() {
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  barArea: { flex: 1, gap: 4 },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  label: {
-    color: '#64748b',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  value: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  trackOuter: {
-    height: 4,
-  },
-  glow: {
-    position: 'absolute',
-    top: -4,
-    left: 0,
-    right: 0,
-    bottom: -4,
-    borderRadius: 3,
-    backgroundColor: '#0ea5e9',
-    shadowColor: '#0ea5e9',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  track: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#1e1e2e',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-    width: 152,
-    backgroundColor: '#0ea5e911',
-    borderWidth: 1,
-    borderColor: '#0ea5e933',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  btnText: {
-    color: '#0ea5e9',
-    fontSize: 11,
-    fontWeight: '700',
-    fontFamily: 'Electrolize-Regular',
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    barArea: { flex: 1, gap: 4 },
+    labelRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    label: {
+      color: theme.textMuted,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    value: {
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    trackOuter: {
+      height: 4,
+    },
+    glow: {
+      position: 'absolute',
+      top: -4,
+      left: 0,
+      right: 0,
+      bottom: -4,
+      borderRadius: 3,
+      backgroundColor: '#0ea5e9',
+      shadowColor: '#0ea5e9',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 1,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    track: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: theme.borderDefault,
+      borderRadius: 2,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    btn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 3,
+      width: 152,
+      backgroundColor: '#0ea5e911',
+      borderWidth: 1,
+      borderColor: '#0ea5e933',
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    btnText: {
+      color: '#0ea5e9',
+      fontSize: 11,
+      fontWeight: '700',
+      fontFamily: 'Electrolize-Regular',
+    },
+  });
+}

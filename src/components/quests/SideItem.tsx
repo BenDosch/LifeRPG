@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useShallow } from 'zustand/react/shallow';
 import { Quest } from '../../types';
 import { useQuestStore } from '../../store/questStore';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface SideItemProps {
   quest: Quest | null;  // null = "All Quests"
@@ -18,6 +20,9 @@ export function SideItem({ quest, isSelected, onSelect }: SideItemProps) {
     )
   );
 
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   return (
     <TouchableOpacity
       style={[styles.item, isSelected && styles.selected]}
@@ -27,7 +32,7 @@ export function SideItem({ quest, isSelected, onSelect }: SideItemProps) {
         <Ionicons
           name={quest ? 'folder-outline' : 'grid-outline'}
           size={16}
-          color={isSelected ? '#a855f7' : '#64748b'}
+          color={isSelected ? '#a855f7' : theme.textMuted}
         />
         <Text
           style={[styles.name, isSelected && styles.nameSelected]}
@@ -45,43 +50,45 @@ export function SideItem({ quest, isSelected, onSelect }: SideItemProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginBottom: 2,
-  },
-  selected: {
-    backgroundColor: '#7c3aed22',
-  },
-  content: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  name: {
-    color: '#94a3b8',
-    fontSize: 14,
-    flex: 1,
-  },
-  nameSelected: {
-    color: '#c4b5fd',
-    fontWeight: '600',
-  },
-  badge: {
-    backgroundColor: '#7c3aed44',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-  },
-  badgeText: {
-    color: '#a855f7',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    item: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 8,
+      marginBottom: 2,
+    },
+    selected: {
+      backgroundColor: '#7c3aed22',
+    },
+    content: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    name: {
+      color: theme.textSecondary,
+      fontSize: 14,
+      flex: 1,
+    },
+    nameSelected: {
+      color: '#c4b5fd',
+      fontWeight: '600',
+    },
+    badge: {
+      backgroundColor: '#7c3aed44',
+      borderRadius: 10,
+      paddingHorizontal: 6,
+      paddingVertical: 1,
+    },
+    badgeText: {
+      color: '#a855f7',
+      fontSize: 11,
+      fontWeight: '700',
+    },
+  });
+}

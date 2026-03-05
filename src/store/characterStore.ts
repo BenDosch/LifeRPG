@@ -10,6 +10,8 @@ import { applyEnergyDecay } from '../utils/energy';
 
 interface CharacterState extends Character {
   customClasses: HeroClassDef[];
+  colorScheme: 'dark' | 'light';
+  setColorScheme: (scheme: 'dark' | 'light') => void;
   setName: (name: string) => void;
   setHeroClass: (heroClass: string) => void;
   awardXP: (xpGained: number) => { didLevelUp: boolean; newLevel: number };
@@ -47,13 +49,15 @@ export const useCharacterStore = create<CharacterState>()(
       energy: 100,
       energyLastUpdated: new Date().toISOString(),
       waterUnit: 'imperial' as const,
-      dailyWaterServings: 10,
+      dailyWaterServings: 8,
       energyDecayEnabled: true,
       energyMinutesPerDay: 960,
       customClasses: [],
       unlockedClasses: [],
+      colorScheme: 'dark' as const,
 
       setName: (name) => set({ name }),
+      setColorScheme: (scheme) => set({ colorScheme: scheme }),
       setHeroClass: (heroClass) => set({ heroClass }),
       setWaterUnit: (unit) => set({ waterUnit: unit }),
       setDailyWaterServings: (servings) => set({ dailyWaterServings: Math.max(1, servings) }),

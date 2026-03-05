@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TextStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuestStore } from '../../store/questStore';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface SkillChipProps {
   name: string;
@@ -13,6 +15,9 @@ interface SkillChipProps {
 export function SkillChip({ name, textStyle, iconSize = 12, coloredText = false }: SkillChipProps) {
   const icon = useQuestStore((s) => s.skillIcons[name]);
   const color = useQuestStore((s) => s.skillColors[name]);
+
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const flatStyle = textStyle ? StyleSheet.flatten(textStyle) : undefined;
   const iconColor = color ?? (flatStyle?.color as string | undefined) ?? '#7c3aed';
@@ -28,14 +33,16 @@ export function SkillChip({ name, textStyle, iconSize = 12, coloredText = false 
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  defaultText: {
-    fontSize: 11,
-    color: '#7c3aed',
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+    },
+    defaultText: {
+      fontSize: 11,
+      color: '#7c3aed',
+    },
+  });
+}

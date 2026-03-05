@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   TextInput,
@@ -12,6 +12,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { useUIStore, SortOrder, DueDateFilter } from '../../store/uiStore';
 import { Tier } from '../../types';
 import { Tooltip } from '../shared/Tooltip';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 const DIFFICULTY_OPTIONS: { label: string; value: Tier }[] = [
   { label: 'Easy', value: 'easy' },
@@ -60,6 +62,9 @@ export function FilterBar() {
     clearFilters: s.clearFilters,
   })));
 
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const hasFilters = !!(difficultyFilter || urgencyFilter || dueDateFilter || sortOrder !== 'due_date');
 
   return (
@@ -67,18 +72,18 @@ export function FilterBar() {
       {/* Search row */}
       <View style={styles.searchRow}>
         <View style={styles.searchBox}>
-          <Ionicons name="search-outline" size={16} color="#64748b" />
+          <Ionicons name="search-outline" size={16} color={theme.textMuted} />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={setSearchQuery}
             placeholder="Search quests..."
-            placeholderTextColor="#475569"
+            placeholderTextColor={theme.textDisabled}
             returnKeyType="search"
           />
           {searchQuery ? (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={16} color="#64748b" />
+              <Ionicons name="close-circle" size={16} color={theme.textMuted} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -92,7 +97,7 @@ export function FilterBar() {
             <Ionicons
               name={showCompleted ? 'eye' : 'eye-off-outline'}
               size={16}
-              color={showCompleted ? '#7c3aed' : '#64748b'}
+              color={showCompleted ? '#7c3aed' : theme.textMuted}
             />
           </TouchableOpacity>
         </Tooltip>
@@ -106,7 +111,7 @@ export function FilterBar() {
             <Ionicons
               name={expanded ? 'options' : 'options-outline'}
               size={16}
-              color={expanded ? '#a855f7' : hasFilters ? '#a855f7' : '#64748b'}
+              color={expanded ? '#a855f7' : hasFilters ? '#a855f7' : theme.textMuted}
             />
             {hasFilters && !expanded && <View style={styles.activeDot} />}
           </TouchableOpacity>
@@ -217,111 +222,113 @@ export function FilterBar() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    gap: 8,
-    paddingBottom: 8,
-  },
-  searchRow: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-  },
-  searchBox: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#12121a',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    gap: 6,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#e2e8f0',
-    fontSize: 14,
-  },
-  iconBtn: {
-    padding: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    backgroundColor: '#12121a',
-  },
-  iconBtnActive: {
-    borderColor: '#7c3aed',
-    backgroundColor: '#7c3aed22',
-  },
-  activeDot: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#a855f7',
-  },
-  clearBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-  },
-  clearText: { color: '#7c3aed', fontSize: 13 },
-  filtersPanel: {
-    gap: 8,
-    paddingTop: 4,
-    paddingBottom: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#1e1e2e',
-  },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  filterLabel: {
-    color: '#a855f7',
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-    width: 68,
-    flexShrink: 0,
-  },
-  chipScroll: { flex: 1 },
-  chips: {
-    flexDirection: 'row',
-    gap: 6,
-    paddingRight: 4,
-  },
-  chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    backgroundColor: '#12121a',
-  },
-  chipActive: {
-    borderColor: '#7c3aed',
-    backgroundColor: '#7c3aed33',
-  },
-  chipText: { color: '#64748b', fontSize: 12 },
-  chipTextActive: { color: '#a855f7' },
-  chipActiveImp: {
-    borderColor: '#06b6d4',
-    backgroundColor: '#06b6d433',
-  },
-  chipTextActiveImp: { color: '#06b6d4' },
-  chipActiveSort: {
-    borderColor: '#f59e0b',
-    backgroundColor: '#f59e0b22',
-  },
-  chipTextActiveSort: { color: '#f59e0b', fontWeight: '600' },
-  chipActiveDue: {
-    borderColor: '#ef4444',
-    backgroundColor: '#ef444422',
-  },
-  chipTextActiveDue: { color: '#ef4444', fontWeight: '600' },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      gap: 8,
+      paddingBottom: 8,
+    },
+    searchRow: {
+      flexDirection: 'row',
+      gap: 8,
+      alignItems: 'center',
+    },
+    searchBox: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.bgCard,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      gap: 6,
+    },
+    searchInput: {
+      flex: 1,
+      color: theme.textPrimary,
+      fontSize: 14,
+    },
+    iconBtn: {
+      padding: 8,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.bgCard,
+    },
+    iconBtnActive: {
+      borderColor: '#7c3aed',
+      backgroundColor: '#7c3aed22',
+    },
+    activeDot: {
+      position: 'absolute',
+      top: 5,
+      right: 5,
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: '#a855f7',
+    },
+    clearBtn: {
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+    },
+    clearText: { color: '#7c3aed', fontSize: 13 },
+    filtersPanel: {
+      gap: 8,
+      paddingTop: 4,
+      paddingBottom: 4,
+      borderTopWidth: 1,
+      borderTopColor: theme.borderDefault,
+    },
+    filterRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    filterLabel: {
+      color: '#a855f7',
+      fontSize: 11,
+      fontWeight: '600',
+      letterSpacing: 0.3,
+      width: 68,
+      flexShrink: 0,
+    },
+    chipScroll: { flex: 1 },
+    chips: {
+      flexDirection: 'row',
+      gap: 6,
+      paddingRight: 4,
+    },
+    chip: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      backgroundColor: theme.bgCard,
+    },
+    chipActive: {
+      borderColor: '#7c3aed',
+      backgroundColor: '#7c3aed33',
+    },
+    chipText: { color: theme.textMuted, fontSize: 12 },
+    chipTextActive: { color: '#a855f7' },
+    chipActiveImp: {
+      borderColor: '#06b6d4',
+      backgroundColor: '#06b6d433',
+    },
+    chipTextActiveImp: { color: '#06b6d4' },
+    chipActiveSort: {
+      borderColor: '#f59e0b',
+      backgroundColor: '#f59e0b22',
+    },
+    chipTextActiveSort: { color: '#f59e0b', fontWeight: '600' },
+    chipActiveDue: {
+      borderColor: '#ef4444',
+      backgroundColor: '#ef444422',
+    },
+    chipTextActiveDue: { color: '#ef4444', fontWeight: '600' },
+  });
+}

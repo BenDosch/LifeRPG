@@ -1,5 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { View, Text, Modal, StyleSheet } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface TooltipProps {
   label: string;
@@ -13,6 +15,9 @@ export function Tooltip({ label, children }: TooltipProps) {
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const wrapperRef = useRef<View>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const show = () => {
     wrapperRef.current?.measure((_fx, _fy, width, height, px, py) => {
@@ -46,21 +51,23 @@ export function Tooltip({ label, children }: TooltipProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  bubble: {
-    position: 'absolute',
-    backgroundColor: '#1e1e2e',
-    borderWidth: 1,
-    borderColor: '#334155',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    minWidth: 90,
-  },
-  text: {
-    color: '#e2e8f0',
-    fontSize: 11,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    bubble: {
+      position: 'absolute',
+      backgroundColor: theme.borderDefault,
+      borderWidth: 1,
+      borderColor: theme.textTertiary,
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      minWidth: 90,
+    },
+    text: {
+      color: theme.textPrimary,
+      fontSize: 11,
+      fontWeight: '500',
+      textAlign: 'center',
+    },
+  });
+}

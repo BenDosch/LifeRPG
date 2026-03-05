@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, View, Text, StyleSheet } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 import { useQuestStore } from '../../store/questStore';
 import { useUIStore } from '../../store/uiStore';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 import { SideItem } from './SideItem';
 
@@ -13,6 +15,9 @@ export function SideList() {
   const { selectedParentId, setSelectedParentId } = useUIStore(
     useShallow((s) => ({ selectedParentId: s.selectedParentId, setSelectedParentId: s.setSelectedParentId }))
   );
+
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   return (
     <View style={styles.container}>
@@ -37,20 +42,22 @@ export function SideList() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0d0d14',
-    paddingTop: 8,
-    paddingHorizontal: 8,
-  },
-  heading: {
-    color: '#475569',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.bgDeep,
+      paddingTop: 8,
+      paddingHorizontal: 8,
+    },
+    heading: {
+      color: theme.textDisabled,
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      paddingHorizontal: 12,
+      paddingBottom: 8,
+    },
+  });
+}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../theme/ThemeContext';
 
 interface Option<T extends string> {
   label: string;
@@ -18,14 +19,16 @@ export function SelectPicker<T extends string>({
   options,
   style,
 }: SelectPickerProps<T>) {
+  const theme = useTheme();
+
   return (
     <select
       value={value}
       onChange={(e) => onValueChange(e.target.value as T)}
       style={{
-        backgroundColor: '#12121a',
-        color: '#e2e8f0',
-        border: '1px solid #1e1e2e',
+        backgroundColor: theme.bgCard,
+        color: theme.textPrimary,
+        border: `1px solid ${theme.borderDefault}`,
         borderRadius: 6,
         padding: '6px 8px',
         fontSize: 14,

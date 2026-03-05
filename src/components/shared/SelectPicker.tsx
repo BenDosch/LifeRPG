@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { useTheme } from '../../theme/ThemeContext';
 
 interface Option<T extends string> {
   label: string;
@@ -20,13 +21,15 @@ export function SelectPicker<T extends string>({
   options,
   style,
 }: SelectPickerProps<T>) {
+  const theme = useTheme();
+
   return (
     <View style={style}>
       <Picker
         selectedValue={value}
         onValueChange={(v) => onValueChange(v as T)}
-        style={{ color: '#e2e8f0', backgroundColor: '#12121a' }}
-        dropdownIconColor="#64748b"
+        style={{ color: theme.textPrimary, backgroundColor: theme.bgCard }}
+        dropdownIconColor={theme.textMuted}
       >
         {options.map((opt) => (
           <Picker.Item key={opt.value} label={opt.label} value={opt.value} />

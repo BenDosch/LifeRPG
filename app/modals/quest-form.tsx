@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { QuestForm } from '../../src/components/forms/QuestForm';
 import { useQuestStore } from '../../src/store/questStore';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { Theme } from '../../src/theme';
 
 export default function QuestFormModal() {
   const router = useRouter();
@@ -18,6 +20,8 @@ export default function QuestFormModal() {
     questId?: string;
     parentId?: string;
   }>();
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const editQuest = useQuestStore((s) =>
     questId ? s.quests.find((p) => p.id === questId) : null
@@ -37,7 +41,7 @@ export default function QuestFormModal() {
           {editQuest ? 'Edit Quest' : 'New Quest'}
         </Text>
         <TouchableOpacity onPress={handleCancel} style={styles.closeBtn}>
-          <Ionicons name="close" size={24} color="#64748b" />
+          <Ionicons name="close" size={24} color={theme.textMuted} />
         </TouchableOpacity>
       </View>
 
@@ -51,24 +55,26 @@ export default function QuestFormModal() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#12121a',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1e1e2e',
-  },
-  title: {
-    color: '#e2e8f0',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  closeBtn: { padding: 4 },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.bgCard,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.borderDefault,
+    },
+    title: {
+      color: theme.textPrimary,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    closeBtn: { padding: 4 },
+  });
+}

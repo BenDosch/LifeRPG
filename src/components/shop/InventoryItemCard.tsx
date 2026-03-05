@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { InventoryItem } from '../../types';
 import { useShopStore } from '../../store/shopStore';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface InventoryItemCardProps {
   item: InventoryItem;
 }
 
 export function InventoryItemCard({ item }: InventoryItemCardProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const useInventoryItem = useShopStore((s) => s.useInventoryItem);
   const shopItem = useShopStore((s) => s.items.find((i) => i.name === item.name));
   const icon = shopItem?.icon ?? null;
@@ -58,78 +63,80 @@ export function InventoryItemCard({ item }: InventoryItemCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: 220,
-    backgroundColor: '#12121a',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    padding: 12,
-    gap: 10,
-  },
-  top: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  bottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nameCol: {
-    flex: 1,
-    gap: 3,
-  },
-  name: {
-    color: '#e2e8f0',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  effectRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  effectText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  qtyBadge: {
-    backgroundColor: '#a855f722',
-    borderWidth: 1,
-    borderColor: '#a855f744',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  qtyText: {
-    color: '#a855f7',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  useBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#ADFF2F11',
-    borderWidth: 1,
-    borderColor: '#ADFF2F33',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  useBtnText: {
-    color: '#ADFF2F',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    container: {
+      width: 220,
+      backgroundColor: theme.bgCard,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      padding: 12,
+      gap: 10,
+    },
+    top: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    bottom: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    iconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    nameCol: {
+      flex: 1,
+      gap: 3,
+    },
+    name: {
+      color: theme.textPrimary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    effectRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    effectText: {
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    qtyBadge: {
+      backgroundColor: '#a855f722',
+      borderWidth: 1,
+      borderColor: '#a855f744',
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    qtyText: {
+      color: '#a855f7',
+      fontSize: 13,
+      fontWeight: '700',
+    },
+    useBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: '#ADFF2F11',
+      borderWidth: 1,
+      borderColor: '#ADFF2F33',
+      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    useBtnText: {
+      color: '#ADFF2F',
+      fontSize: 12,
+      fontWeight: '600',
+    },
+  });
+}

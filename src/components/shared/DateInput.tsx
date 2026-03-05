@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../theme/ThemeContext';
+import { Theme } from '../../theme';
 
 interface DateInputProps {
   value: string | null; // YYYY-MM-DD or null
@@ -30,6 +32,9 @@ export function DateInput({ value, onChange }: DateInputProps) {
   const [day, setDay] = useState(() => parseDateParts(value)[0]);
   const [month, setMonth] = useState(() => parseDateParts(value)[1]);
   const [year, setYear] = useState(() => parseDateParts(value)[2]);
+
+  const theme = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
 
   const emit = (d: number, m: number, y: number) => {
     onChange(`${y}-${pad(m)}-${pad(d)}`);
@@ -70,7 +75,7 @@ export function DateInput({ value, onChange }: DateInputProps) {
           emit(d, m, y);
         }}
       >
-        <Ionicons name="calendar-outline" size={16} color="#475569" />
+        <Ionicons name="calendar-outline" size={16} color={theme.textDisabled} />
         <Text style={styles.setBtnText}>Set due date</Text>
       </TouchableOpacity>
     );
@@ -88,7 +93,7 @@ export function DateInput({ value, onChange }: DateInputProps) {
         onPress={() => onChange(null)}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
-        <Ionicons name="close-circle" size={18} color="#475569" />
+        <Ionicons name="close-circle" size={18} color={theme.textDisabled} />
       </TouchableOpacity>
     </View>
   );
@@ -97,6 +102,8 @@ export function DateInput({ value, onChange }: DateInputProps) {
 function Stepper({
   label, value, onUp, onDown,
 }: { label: string; value: string; onUp: () => void; onDown: () => void }) {
+  const theme = useTheme();
+  const stepStyles = useMemo(() => getStepStyles(theme), [theme]);
   return (
     <View style={stepStyles.wrap}>
       <Text style={stepStyles.label}>{label}</Text>
@@ -111,38 +118,42 @@ function Stepper({
   );
 }
 
-const styles = StyleSheet.create({
-  setBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    alignSelf: 'flex-start',
-  },
-  setBtnText: { color: '#475569', fontSize: 14 },
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#0a0a0f',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#1e1e2e',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignSelf: 'flex-start',
-  },
-  sep: { color: '#334155', fontSize: 16, marginHorizontal: 2 },
-  clearBtn: { marginLeft: 6 },
-});
+function getStyles(theme: Theme) {
+  return StyleSheet.create({
+    setBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      alignSelf: 'flex-start',
+    },
+    setBtnText: { color: theme.textDisabled, fontSize: 14 },
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: theme.bgPage,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.borderDefault,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      alignSelf: 'flex-start',
+    },
+    sep: { color: theme.textTertiary, fontSize: 16, marginHorizontal: 2 },
+    clearBtn: { marginLeft: 6 },
+  });
+}
 
-const stepStyles = StyleSheet.create({
-  wrap: { alignItems: 'center', gap: 1 },
-  label: { color: '#334155', fontSize: 9, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3 },
-  value: { color: '#e2e8f0', fontSize: 14, fontWeight: '700', minWidth: 36, textAlign: 'center' },
-});
+function getStepStyles(theme: Theme) {
+  return StyleSheet.create({
+    wrap: { alignItems: 'center', gap: 1 },
+    label: { color: theme.textTertiary, fontSize: 9, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3 },
+    value: { color: theme.textPrimary, fontSize: 14, fontWeight: '700', minWidth: 36, textAlign: 'center' },
+  });
+}
