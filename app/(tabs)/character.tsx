@@ -22,6 +22,8 @@ import { useShopStore } from '../../src/store/shopStore';
 import { ConfirmDialog } from '../../src/components/shared/ConfirmDialog';
 import { IconPickerModal } from '../../src/components/skills/IconPickerModal';
 import { SliderInput } from '../../src/components/shared/SliderInput';
+import { FlashSlider } from '../../src/components/shared/FlashSlider';
+import { WaterDropSlider } from '../../src/components/shared/WaterDropSlider';
 import { useUIStore } from '../../src/store/uiStore';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { Theme, resolveIconColor } from '../../src/theme';
@@ -811,22 +813,36 @@ export default function CharacterScreen() {
             <Text style={styles.fixModalTitle}>Fix Energy &amp; Hydration</Text>
             <Text style={styles.fixModalSubtitle}>Drag the sliders to match your current state</Text>
 
-            <View style={styles.fixModalSection}>
-              <View style={styles.fixModalLabelRow}>
-                <Ionicons name="flash" size={15} color="#4ade80" />
-                <Text style={styles.fixModalLabel}>Energy</Text>
-                <Text style={[styles.fixModalValue, { color: '#4ade80' }]}>{draftEnergy}%</Text>
+            <View style={styles.fixModalSliders}>
+              {/* Energy — Battery */}
+              <View style={styles.fixModalSliderCol}>
+                <FlashSlider value={draftEnergy} onValueChange={setDraftEnergy} />
+                <Text style={[styles.fixModalValue, { color: (() => {
+                  const r = draftEnergy / 100;
+                  const lerp = (a: number, b: number) => Math.round(a + (b - a) * r);
+                  const er = lerp(0xef, 0x4a), eg = lerp(0x44, 0xde), eb = lerp(0x44, 0x80);
+                  return `#${er.toString(16).padStart(2,'0')}${eg.toString(16).padStart(2,'0')}${eb.toString(16).padStart(2,'0')}`;
+                })() }]}>{draftEnergy}%</Text>
+                <View style={styles.fixModalColLabel}>
+                  <Ionicons name="flash" size={13} color="#4ade80" />
+                  <Text style={styles.fixModalLabel}>Energy</Text>
+                </View>
               </View>
-              <SliderInput value={draftEnergy} onValueChange={setDraftEnergy} color="#4ade80" />
-            </View>
 
-            <View style={styles.fixModalSection}>
-              <View style={styles.fixModalLabelRow}>
-                <Ionicons name="water" size={15} color="#0ea5e9" />
-                <Text style={styles.fixModalLabel}>Hydration</Text>
-                <Text style={[styles.fixModalValue, { color: '#0ea5e9' }]}>{draftHydration}%</Text>
+              {/* Hydration — Water Drop */}
+              <View style={styles.fixModalSliderCol}>
+                <WaterDropSlider value={draftHydration} onValueChange={setDraftHydration} />
+                <Text style={[styles.fixModalValue, { color: (() => {
+                  const r = draftHydration / 100;
+                  const lerp = (a: number, b: number) => Math.round(a + (b - a) * r);
+                  const hr = lerp(0xef, 0x0e), hg = lerp(0x44, 0xa5), hb = lerp(0x44, 0xe9);
+                  return `#${hr.toString(16).padStart(2,'0')}${hg.toString(16).padStart(2,'0')}${hb.toString(16).padStart(2,'0')}`;
+                })() }]}>{draftHydration}%</Text>
+                <View style={styles.fixModalColLabel}>
+                  <Ionicons name="water" size={13} color="#0ea5e9" />
+                  <Text style={styles.fixModalLabel}>Hydration</Text>
+                </View>
               </View>
-              <SliderInput value={draftHydration} onValueChange={setDraftHydration} color="#0ea5e9" />
             </View>
 
             <View style={styles.fixModalButtons}>
@@ -1444,22 +1460,28 @@ function getStyles(theme: Theme) {
       fontSize: 12,
       marginTop: -8,
     },
-    fixModalSection: {
-      gap: 10,
+    fixModalSliders: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      alignItems: 'flex-end',
+      paddingVertical: 8,
     },
-    fixModalLabelRow: {
+    fixModalSliderCol: {
+      alignItems: 'center',
+      gap: 8,
+    },
+    fixModalColLabel: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: 4,
     },
     fixModalLabel: {
-      flex: 1,
       color: theme.textSecondary,
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '600',
     },
     fixModalValue: {
-      fontSize: 14,
+      fontSize: 18,
       fontWeight: '700',
     },
     fixModalButtons: {
