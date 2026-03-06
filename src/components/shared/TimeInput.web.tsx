@@ -4,7 +4,7 @@ import TimeKeeper, { TimeOutput } from 'react-timekeeper';
 import { useTheme } from '../../theme/ThemeContext';
 
 interface TimeInputProps {
-  value: string | null; // HH:MM or null
+  value: string | null;
   onChange: (value: string | null) => void;
 }
 
@@ -24,43 +24,15 @@ function to12hInput(time: string): string {
 
 export function TimeInput({ value, onChange }: TimeInputProps) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
   const triggerRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
 
-  // Recalculate position whenever the clock opens
-  useEffect(() => {
-    if (open && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const CLOCK_W = 268;
-      const CLOCK_H = 310;
-      const GAP = 8;
-
-      // Horizontal: align left with trigger, but clamp to viewport
-      const rawLeft = rect.left + window.scrollX;
-      const maxLeft = window.innerWidth - CLOCK_W - GAP;
-      const left = Math.max(GAP, Math.min(rawLeft, maxLeft));
-
-      // Vertical: prefer below, flip above if not enough room
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const top = spaceBelow >= CLOCK_H + GAP
-        ? rect.bottom + window.scrollY + GAP
-        : rect.top + window.scrollY - CLOCK_H - GAP;
-
-      setPos({ top, left });
-    }
-  }, [open]);
-
-  // Close on outside click
+  // Close on outside click (backdrop handles this, but keep for safety)
   useEffect(() => {
     if (!open) return;
     const handle = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (triggerRef.current && !triggerRef.current.contains(target)) {
-        // Don't close if clicking inside the portal clock
-        const portal = document.getElementById('timepicker-portal');
-        if (!portal || !portal.contains(target)) setOpen(false);
-      }
+      const portal = document.getElementById('timepicker-portal');
+      if (portal && !portal.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
@@ -72,24 +44,38 @@ export function TimeInput({ value, onChange }: TimeInputProps) {
   };
 
   const clock = open ? ReactDOM.createPortal(
-    <div
-      id="timepicker-portal"
-      style={{
-        position: 'absolute',
-        top: pos.top,
-        left: pos.left,
-        zIndex: 9999,
-        borderRadius: 12,
-        overflow: 'hidden',
-      }}
-    >
-      <TimeKeeper
-        time={value ? to12hInput(value) : '12:00pm'}
-        onChange={(t: TimeOutput) => onChange(t.formatted24)}
-        onDoneClick={handleDone}
-        switchToMinuteOnHourSelect
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={() => setOpen(false)}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9998,
+          background: 'rgba(0,0,0,0.5)',
+        }}
       />
-    </div>,
+      {/* Centered picker */}
+      <div
+        id="timepicker-portal"
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 9999,
+          borderRadius: 12,
+          overflow: 'hidden',
+        }}
+      >
+        <TimeKeeper
+          time={value ? to12hInput(value) : '12:00pm'}
+          onChange={(t: TimeOutput) => onChange(t.formatted24)}
+          onDoneClick={handleDone}
+          switchToMinuteOnHourSelect
+        />
+      </div>
+    </>,
     document.body
   ) : null;
 

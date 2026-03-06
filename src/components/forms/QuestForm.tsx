@@ -206,46 +206,40 @@ export function QuestForm({
   return (
     <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
-        <Text style={styles.sectionLabel}>Quest Name</Text>
-        <TextInput
-          style={styles.textInput}
-          value={name}
-          onChangeText={setName}
-          placeholder="Enter quest name..."
-          placeholderTextColor={theme.textDisabled}
-          autoFocus
-          returnKeyType="done"
-          onSubmitEditing={handleSave}
-        />
-
-        {/* Icon */}
-        <Text style={styles.sectionLabel}>Icon</Text>
-        <TouchableOpacity
-          style={[
-            styles.iconPickerBtn,
-            icon && { borderColor: (iconColor ?? '#a855f7') + '55', backgroundColor: (iconColor ?? '#a855f7') + '11' },
-          ]}
-          onPress={() => setShowIconPicker(true)}
-        >
-          {icon ? (
-            <>
-              <View style={[styles.iconPickerPreview, { borderColor: (iconColor ?? '#a855f7') + '44', backgroundColor: (iconColor ?? '#a855f7') + '22' }]}>
-                <Ionicons name={icon as any} size={22} color={iconColor ?? '#a855f7'} />
-              </View>
-              <Text style={[styles.iconPickerLabel, { color: iconColor ?? '#a855f7' }]}>
-                {icon.replace(/-(outline|sharp)$/, '').split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-              </Text>
-            </>
-          ) : (
-            <>
-              <View style={styles.iconPickerPreviewEmpty}>
-                <Ionicons name="image-outline" size={22} color={theme.textTertiary} />
-              </View>
-              <Text style={styles.iconPickerLabelEmpty}>No icon — tap to set</Text>
-            </>
-          )}
-          <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
-        </TouchableOpacity>
+        {/* Name + Icon Row */}
+        <View style={styles.nameIconRow}>
+          <View style={styles.iconColumn}>
+            <Text style={styles.sectionLabel}>Icon</Text>
+            <TouchableOpacity
+              style={[styles.iconPreview, { borderColor: icon ? (iconColor ?? '#a855f7') : theme.borderDefault }]}
+              onPress={() => setShowIconPicker(true)}
+            >
+              {icon ? (
+                <Ionicons name={icon as any} size={26} color={iconColor ?? '#a855f7'} />
+              ) : (
+                <Ionicons name="add" size={22} color={theme.textTertiary} />
+              )}
+              {icon && (
+                <TouchableOpacity onPress={() => { setIcon(null); setIconColor(null); }} style={styles.clearIcon}>
+                  <Ionicons name="close-circle" size={16} color={theme.textDisabled} />
+                </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+          </View>
+          <View style={styles.nameField}>
+            <Text style={styles.sectionLabel}>Quest Name</Text>
+            <TextInput
+              style={styles.textInput}
+              value={name}
+              onChangeText={setName}
+              placeholder="Enter quest name..."
+              placeholderTextColor={theme.textDisabled}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleSave}
+            />
+          </View>
+        </View>
 
         {/* Details */}
         <Text style={styles.sectionLabel}>Details</Text>
@@ -708,6 +702,33 @@ function getStyles(theme: Theme) {
       paddingVertical: 10,
       color: theme.textPrimary,
       fontSize: 15,
+      height: 42,
+    },
+    nameIconRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: 10,
+      marginBottom: 4,
+    },
+    iconColumn: {
+      alignItems: 'center',
+      gap: 8,
+    },
+    nameField: {
+      flex: 1,
+      gap: 8,
+    },
+    iconPreview: {
+      width: 42,
+      height: 42,
+      borderRadius: 8,
+      borderWidth: 1,
+      backgroundColor: theme.bgPage,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    clearIcon: {
+      padding: 4,
     },
     detailsInput: {
       minHeight: 72,
