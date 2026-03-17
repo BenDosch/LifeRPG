@@ -9,7 +9,7 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Quest, RepeatSchedule, getTierLabel, getTierColor, getUrgencyLabel } from '../../types';
+import { Quest, RepeatSchedule, QuestNotification, getTierLabel, getTierColor, getUrgencyLabel } from '../../types';
 import { IconPickerModal } from '../skills/IconPickerModal';
 import { calcXP } from '../../utils/xp';
 import { ArcSlider } from '../shared/ArcSlider';
@@ -66,6 +66,11 @@ export function QuestForm({
   const [dueDateScheduleWeekdays, setDueDateScheduleWeekdays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [classQuestEnabled, setClassQuestEnabled] = useState(false);
   const [classQuest, setClassQuest] = useState<string | null>(null);
+  const [notification, setNotification] = useState<QuestNotification | null>(null);
+  const [notifType, setNotifType] = useState<'none' | 'time_of_day' | 'before_due'>('none');
+  const [notifHour, setNotifHour] = useState(9);
+  const [notifMinute, setNotifMinute] = useState(0);
+  const [notifMinutesBefore, setNotifMinutesBefore] = useState(30);
   const [icon, setIcon] = useState<string | null>(null);
   const [iconColor, setIconColor] = useState<string | null>(null);
   const [showIconPicker, setShowIconPicker] = useState(false);
@@ -128,6 +133,18 @@ export function QuestForm({
       }
       setClassQuestEnabled(!!editQuest.classQuest);
       setClassQuest(editQuest.classQuest ?? null);
+      const n = editQuest.notification ?? null;
+      setNotification(n);
+      if (!n) {
+        setNotifType('none');
+      } else if (n.type === 'time_of_day') {
+        setNotifType('time_of_day');
+        setNotifHour(n.hour);
+        setNotifMinute(n.minute);
+      } else {
+        setNotifType('before_due');
+        setNotifMinutesBefore(n.minutesBefore);
+      }
       setIcon(editQuest.icon ?? null);
       setIconColor(editQuest.iconColor ?? null);
       setHasParent(!!editQuest.parentId);
@@ -151,6 +168,12 @@ export function QuestForm({
       setParentAutoComplete(false);
     }
   }, [parentId, hasParent, rootQuests]);
+
+  const buildNotification = (): QuestNotification | null => {
+    if (notifType === 'time_of_day') return { type: 'time_of_day', hour: notifHour, minute: notifMinute };
+    if (notifType === 'before_due') return { type: 'before_due', minutesBefore: notifMinutesBefore };
+    return null;
+  };
 
   const buildDueDateSchedule = (): RepeatSchedule | null => {
     if (!dueDateScheduleEnabled || !dueDate) return null;
@@ -181,6 +204,7 @@ export function QuestForm({
         repeatable, repeatSchedule, parentId: hasParent ? parentId : null,
         autoCompleteOnSubQuests: hasParent ? false : autoCompleteOnSubQuests,
         goldReward, hydrationReward, energyReward, hydrationCost, energyCost, dueDate, dueTime, dueDateSchedule: buildDueDateSchedule(),
+        notification: buildNotification(),
         icon, iconColor, classQuest,
       });
     } else {
@@ -189,6 +213,7 @@ export function QuestForm({
         repeatable, repeatSchedule, parentId: hasParent ? parentId : null,
         autoCompleteOnSubQuests: hasParent ? false : autoCompleteOnSubQuests,
         goldReward, hydrationReward, energyReward, hydrationCost, energyCost, dueDate, dueTime, dueDateSchedule: buildDueDateSchedule(),
+        notification: buildNotification(),
         icon, iconColor, classQuest,
       });
     }
@@ -437,12 +462,72 @@ export function QuestForm({
             <View style={styles.dateTimeRow}>
               <DateInput
                 value={dueDate}
-                onChange={(v) => { setDueDate(v); if (!v) setDueTime(null); }}
+                onChange={(v) => { setDueDate(v); if (!v) { setDueTime(null); setNotifType('none'); } }}
               />
               {dueDate && (
-                <TimeInput value={dueTime} onChange={setDueTime} />
+                <TimeInput value={dueTime} onChange={(v) => { setDueTime(v); if (!v && notifType === 'before_due') setNotifType('none'); }} />
               )}
             </View>
+          </>
+        )}
+
+        {/* Notification — only shown when a due date is set */}
+        {dueDate && (
+          <>
+            <Text style={styles.sectionLabel}>Notification</Text>
+            <View style={styles.scheduleTypeRow}>
+              {(['none', 'time_of_day', 'before_due'] as const).map((t) => {
+                const disabled = t === 'before_due' && !dueTime;
+                return (
+                  <TouchableOpacity
+                    key={t}
+                    style={[styles.scheduleChip, notifType === t && styles.notifChipActive, disabled && { opacity: 0.4 }]}
+                    onPress={() => { if (!disabled) setNotifType(t); }}
+                    disabled={disabled}
+                  >
+                    <Text style={[styles.scheduleChipText, notifType === t && styles.notifChipTextActive]}>
+                      {t === 'none' ? 'None' : t === 'time_of_day' ? 'At a time' : 'Before due'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {notifType === 'time_of_day' && (
+              <View style={styles.everyRow}>
+                <Text style={styles.everyLabel}>At</Text>
+                <TouchableOpacity style={styles.stepBtn} onPress={() => setNotifHour((h) => (h - 1 + 24) % 24)}>
+                  <Ionicons name="remove" size={18} color="#a855f7" />
+                </TouchableOpacity>
+                <Text style={styles.everyValue}>{String(notifHour).padStart(2, '0')}</Text>
+                <TouchableOpacity style={styles.stepBtn} onPress={() => setNotifHour((h) => (h + 1) % 24)}>
+                  <Ionicons name="add" size={18} color="#a855f7" />
+                </TouchableOpacity>
+                <Text style={styles.everyLabel}>:</Text>
+                <TouchableOpacity style={styles.stepBtn} onPress={() => setNotifMinute((m) => (m - 5 + 60) % 60)}>
+                  <Ionicons name="remove" size={18} color="#a855f7" />
+                </TouchableOpacity>
+                <Text style={styles.everyValue}>{String(notifMinute).padStart(2, '0')}</Text>
+                <TouchableOpacity style={styles.stepBtn} onPress={() => setNotifMinute((m) => (m + 5) % 60)}>
+                  <Ionicons name="add" size={18} color="#a855f7" />
+                </TouchableOpacity>
+              </View>
+            )}
+            {notifType === 'before_due' && (
+              <View style={styles.everyRow}>
+                <Text style={styles.everyLabel}>Before by</Text>
+                {[30, 60, 120, 1440].map((mins) => (
+                  <TouchableOpacity
+                    key={mins}
+                    style={[styles.scheduleChip, notifMinutesBefore === mins && styles.notifChipActive]}
+                    onPress={() => setNotifMinutesBefore(mins)}
+                  >
+                    <Text style={[styles.scheduleChipText, notifMinutesBefore === mins && styles.notifChipTextActive]}>
+                      {mins < 60 ? `${mins}m` : mins === 1440 ? '1d' : `${mins / 60}h`}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </>
         )}
 
@@ -915,6 +1000,8 @@ function getStyles(theme: Theme) {
     dayChipText: { color: theme.textDisabled, fontSize: 12, fontWeight: '600' },
     dayChipTextActive: { color: '#a855f7' },
     dateTimeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+    notifChipActive: { borderColor: '#f59e0b', backgroundColor: '#f59e0b22' },
+    notifChipTextActive: { color: '#f59e0b', fontWeight: '600' },
     dueDateChipActive: { borderColor: '#0ea5e9', backgroundColor: '#0ea5e922' },
     dueDateChipTextActive: { color: '#0ea5e9', fontWeight: '600' },
     dueDateDayChipActive: { borderColor: '#0ea5e9', backgroundColor: '#0ea5e922' },

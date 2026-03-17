@@ -34,6 +34,10 @@ newEnergy = max(0, energy - energyLost)
 - **Item use**: Inventory items can have an `energyEffect` (positive or negative percentage).
 - **Full rest**: The character screen provides a "Full Rest" button that sets energy to 100%.
 
+### Threshold Notifications
+
+When `energyNotification.enabled` is true on the character document, the server delivers a push notification when energy decays to `energyNotification.threshold`. The notification is scheduled server-side by a Cloud Function whenever the character document is written — the client decay hooks do not interact with notification scheduling. See [notifications.md](./notifications.md) for scheduling details.
+
 ### Display
 
 Energy is shown as a percentage bar in the HUD bar at the top of every screen. The bar is color-coded based on value:
@@ -79,6 +83,10 @@ Each drink adds `100 / dailyWaterServings` percentage points. For example, if th
 - **Quest costs**: `hydrationCost` deducts the specified % on quest completion.
 - **Item use**: Inventory items can have a `hydrationEffect` (positive or negative percentage).
 
+### Threshold Notifications
+
+When `hydrationNotification.enabled` is true on the character document, the server delivers a push notification when hydration decays to `hydrationNotification.threshold`. The same server-side scheduling mechanism used for energy applies here. See [notifications.md](./notifications.md) for scheduling details.
+
 ### Display
 
 Hydration is shown as a percentage bar in the HUD bar alongside energy. A water drop icon accompanies it. The bar can visually exceed 100% (up to 120%) to reflect the overage buffer.
@@ -113,6 +121,8 @@ Energy and hydration decay are applied in two situations:
 2. **Periodic tick**: While the app is open, decay is applied every 60 seconds via hooks mounted in the root layout (`useEnergyDecay`, `useHydrationDecay`).
 
 Both hooks use the store's `getState()` method (not a reactive selector) to avoid triggering unnecessary re-renders, and run with empty dependency arrays.
+
+The server independently tracks the stored `energy`/`hydration` values and timestamps in Firestore to schedule threshold notifications. The client decay hooks do not need to interact with notification scheduling — the Cloud Function re-reads the values from the character document each time it is written and recalculates the schedule.
 
 ---
 

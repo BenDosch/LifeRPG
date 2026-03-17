@@ -167,7 +167,7 @@ All requirements must be satisfied simultaneously to unlock a class.
 
 ### Unlocking Classes
 
-When the player meets all requirements for a class, it is automatically detected on quest completion and added to `unlockedClasses`. This triggers a level-up event of type `class_unlock`, which displays in the Level Up modal with an "Unlock!" quick-action button that equips the class.
+When the player meets all requirements for a class, it is automatically detected on quest completion and added to `unlockedClasses`. This triggers a level-up event of type `class_unlock`, which displays in the Level Up modal with an "Unlock!" quick-action button that equips the class. The `unlockedClasses` array is stored on the character Firestore document (`users/{uid}/character`) — see [data.md](./data.md) for the full document shape.
 
 A class can be locked again (removed from `unlockedClasses`) via the character store — this is an admin action not exposed in normal gameplay UI.
 

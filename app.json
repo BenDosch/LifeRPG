@@ -15,13 +15,15 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.liferpg.app"
+      "bundleIdentifier": "com.liferpg.app",
+      "googleServicesFile": "./ios/GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0a0a0f"
       },
-      "package": "com.liferpg.app"
+      "package": "com.liferpg.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -32,6 +34,7 @@
       "backgroundColor": "#0a0a0f"
     },
     "plugins": [
+      "@react-native-firebase/app",
       "expo-router",
       [
         "expo-font",
@@ -51,6 +54,15 @@
       },
       "eas": {
         "projectId": "e316ad18-3e74-4d90-982f-1933687f0be5"
+      },
+      "firebaseWeb": {
+        "apiKey": "REPLACE_WITH_YOUR_API_KEY",
+        "authDomain": "REPLACE_WITH_YOUR_PROJECT_ID.firebaseapp.com",
+        "projectId": "REPLACE_WITH_YOUR_PROJECT_ID",
+        "storageBucket": "REPLACE_WITH_YOUR_PROJECT_ID.appspot.com",
+        "messagingSenderId": "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
+        "appId": "REPLACE_WITH_YOUR_APP_ID",
+        "measurementId": "REPLACE_WITH_YOUR_MEASUREMENT_ID"
       }
     },
     "owner": "prophetofthetao"

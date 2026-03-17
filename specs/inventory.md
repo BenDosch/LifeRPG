@@ -82,9 +82,11 @@ Items with a `hydrationEffect` trigger a hydration decay catch-up before applyin
 
 ## Data Persistence
 
-The shop store persists to AsyncStorage under the key `liferpg-shop`. It stores:
-- `items`: The full shop catalog (all ShopItem objects)
-- `inventory`: The player's current inventory (all InventoryItem objects)
+The shop store persists to two Firestore subcollections under `users/{uid}`:
+- `shopItems/{itemId}` — the shop catalog; each item is a separate document keyed by its `id`
+- `inventory/{itemId}` — the player's owned items; each entry is a separate document keyed by its `id`
+
+On sign-in, both subcollections are fetched in parallel to hydrate the store. Every store action that mutates shop or inventory state writes the affected document(s) to Firestore immediately after updating local state (fire-and-forget).
 
 ---
 

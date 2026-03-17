@@ -30,6 +30,7 @@ Quests are the primary unit of work in LifeRPG. Each quest represents a real-wor
 | `classQuest` | string \| null | If set, XP goes to this class instead of the equipped class |
 | `icon` | string \| null | Ionicons icon name |
 | `iconColor` | string \| null | Hex color for the icon |
+| `notification` | `QuestNotification \| null` | Scheduled reminder for this quest's due date |
 
 ---
 
@@ -102,6 +103,8 @@ Due dates are optional and stored as a `YYYY-MM-DD` string. An optional `dueTime
 
 **Skipping**: A repeatable quest can be skipped (without awarding XP/rewards) via `skipQuest()`. This advances the due date schedule identically to completion.
 
+**Notifications and due dates**: The `notification` field is tied to the due date. A `before_due` notification requires both `dueDate` and `dueTime` to be set. A `time_of_day` notification requires only `dueDate`. If the player removes `dueDate`, the notification config is cleared automatically. If `dueTime` is removed while a `before_due` notification is configured, the notification resets to `null`.
+
 ---
 
 ## Completion Flow
@@ -142,6 +145,28 @@ Sort order options:
 - Difficulty (descending)
 
 Filters are held in the UI store and are not persisted across app restarts.
+
+---
+
+## Quest Notifications
+
+Each quest with a due date can have at most one scheduled notification, configured via the `notification: QuestNotification | null` field.
+
+### QuestNotification Variants
+
+```typescript
+type QuestNotification =
+  | { type: 'time_of_day'; hour: number; minute: number }  // fire at this hour:minute on dueDate
+  | { type: 'before_due'; minutesBefore: number };         // fire N minutes before dueDate + dueTime
+```
+
+**`time_of_day`**: Fires at the specified hour and minute on the quest's `dueDate`, interpreted in the player's timezone. Available whenever a `dueDate` is set.
+
+**`before_due`**: Fires `minutesBefore` minutes before the combined `dueDate` + `dueTime`. Only available when the quest has both a `dueDate` and a `dueTime`. Common presets: 15, 30, 60, 120, 1440, 2880 minutes.
+
+The client only stores the config. Scheduling, cancellation, and rescheduling are handled entirely server-side by the `onQuestWritten` Cloud Function whenever the quest document is written to Firestore. No dedicated store action is needed.
+
+See [notifications.md](./notifications.md) for the full scheduling lifecycle.
 
 ---
 

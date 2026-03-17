@@ -26,14 +26,18 @@ import { FlashSlider } from '../../src/components/shared/FlashSlider';
 import { WaterDropSlider } from '../../src/components/shared/WaterDropSlider';
 import { useUIStore } from '../../src/store/uiStore';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { useAuthStore } from '../../src/store/authStore';
 import { Theme, resolveIconColor } from '../../src/theme';
+import { NotificationPermissionBanner } from '../../src/components/NotificationPermissionBanner';
 
 export default function CharacterScreen() {
   const {
     name, heroClass, customClasses, points, gold, unlockedClasses,
     waterUnit, dailyWaterServings, energyMinutesPerDay, energyDecayEnabled,
     colorScheme, setColorScheme, energy, hydration,
+    energyNotification, hydrationNotification,
     setName, setHeroClass, setWaterUnit, setDailyWaterServings, setEnergyMinutesPerDay, setEnergyDecayEnabled,
+    setEnergyNotification, setHydrationNotification,
   } = useCharacterStore(
     useShallow((s) => ({
       name: s.name,
@@ -50,12 +54,16 @@ export default function CharacterScreen() {
       setColorScheme: s.setColorScheme,
       energy: s.energy,
       hydration: s.hydration,
+      energyNotification: s.energyNotification,
+      hydrationNotification: s.hydrationNotification,
       setName: s.setName,
       setHeroClass: s.setHeroClass,
       setWaterUnit: s.setWaterUnit,
       setDailyWaterServings: s.setDailyWaterServings,
       setEnergyMinutesPerDay: s.setEnergyMinutesPerDay,
       setEnergyDecayEnabled: s.setEnergyDecayEnabled,
+      setEnergyNotification: s.setEnergyNotification,
+      setHydrationNotification: s.setHydrationNotification,
     }))
   );
 
@@ -723,6 +731,98 @@ export default function CharacterScreen() {
             <Ionicons name="chevron-forward" size={16} color={theme.textDisabled} />
           </TouchableOpacity>
         </View>
+        <Text style={styles.sectionHeading}>Notifications</Text>
+        <View style={styles.card}>
+          <NotificationPermissionBanner />
+
+          {/* Energy Alert */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabelCol}>
+              <Text style={styles.fieldLabel}>Energy Alert</Text>
+              <Text style={styles.settingHint}>
+                {energyNotification.enabled
+                  ? `Alert when energy drops below ${energyNotification.threshold}%`
+                  : 'Off — no alert for low energy'}
+              </Text>
+            </View>
+            <Switch
+              value={energyNotification.enabled}
+              onValueChange={(v) => setEnergyNotification({ ...energyNotification, enabled: v })}
+              trackColor={{ false: theme.borderMuted, true: '#4ade8066' }}
+              thumbColor={energyNotification.enabled ? '#4ade80' : '#fff'}
+            />
+          </View>
+          {energyNotification.enabled && (
+            <View style={styles.settingRow}>
+              <Text style={styles.settingHint}>Alert threshold (%)</Text>
+              <View style={styles.stepper}>
+                <TouchableOpacity
+                  style={[styles.stepBtn, styles.stepBtnAmber]}
+                  onPress={() => setEnergyNotification({ ...energyNotification, threshold: Math.max(0, energyNotification.threshold - 5) })}
+                  disabled={energyNotification.threshold <= 0}
+                >
+                  <Ionicons name="remove" size={16} color={energyNotification.threshold <= 0 ? '#334155' : '#4ade80'} />
+                </TouchableOpacity>
+                <Text style={styles.stepValue}>
+                  {energyNotification.threshold}
+                  <Text style={styles.stepUnit}>%</Text>
+                </Text>
+                <TouchableOpacity
+                  style={[styles.stepBtn, styles.stepBtnAmber]}
+                  onPress={() => setEnergyNotification({ ...energyNotification, threshold: Math.min(100, energyNotification.threshold + 5) })}
+                  disabled={energyNotification.threshold >= 100}
+                >
+                  <Ionicons name="add" size={16} color={energyNotification.threshold >= 100 ? '#334155' : '#4ade80'} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.settingDivider} />
+
+          {/* Hydration Alert */}
+          <View style={styles.settingRow}>
+            <View style={styles.settingLabelCol}>
+              <Text style={styles.fieldLabel}>Hydration Alert</Text>
+              <Text style={styles.settingHint}>
+                {hydrationNotification.enabled
+                  ? `Alert when hydration drops below ${hydrationNotification.threshold}`
+                  : 'Off — no alert for low hydration'}
+              </Text>
+            </View>
+            <Switch
+              value={hydrationNotification.enabled}
+              onValueChange={(v) => setHydrationNotification({ ...hydrationNotification, enabled: v })}
+              trackColor={{ false: theme.borderMuted, true: '#0ea5e966' }}
+              thumbColor={hydrationNotification.enabled ? '#0ea5e9' : '#fff'}
+            />
+          </View>
+          {hydrationNotification.enabled && (
+            <View style={styles.settingRow}>
+              <Text style={styles.settingHint}>Alert threshold</Text>
+              <View style={styles.stepper}>
+                <TouchableOpacity
+                  style={styles.stepBtn}
+                  onPress={() => setHydrationNotification({ ...hydrationNotification, threshold: Math.max(0, hydrationNotification.threshold - 5) })}
+                  disabled={hydrationNotification.threshold <= 0}
+                >
+                  <Ionicons name="remove" size={16} color={hydrationNotification.threshold <= 0 ? '#334155' : '#0ea5e9'} />
+                </TouchableOpacity>
+                <Text style={styles.stepValue}>
+                  {hydrationNotification.threshold}
+                </Text>
+                <TouchableOpacity
+                  style={styles.stepBtn}
+                  onPress={() => setHydrationNotification({ ...hydrationNotification, threshold: Math.min(120, hydrationNotification.threshold + 5) })}
+                  disabled={hydrationNotification.threshold >= 120}
+                >
+                  <Ionicons name="add" size={16} color={hydrationNotification.threshold >= 120 ? '#334155' : '#0ea5e9'} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+
         <Text style={styles.sectionHeading}>Data</Text>
         <View style={styles.card}>
           <TouchableOpacity
@@ -731,6 +831,14 @@ export default function CharacterScreen() {
           >
             <Ionicons name="warning-outline" size={18} color="#dc2626" />
             <Text style={styles.dangerText}>Reset All Progress</Text>
+          </TouchableOpacity>
+          <View style={styles.cardDivider} />
+          <TouchableOpacity
+            style={styles.signOutBtn}
+            onPress={() => useAuthStore.getState().signOut()}
+          >
+            <Ionicons name="log-out-outline" size={18} color={theme.textMuted} />
+            <Text style={styles.signOutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -1281,6 +1389,17 @@ function getStyles(theme: Theme) {
       gap: 8,
     },
     dangerText: { color: '#dc2626', fontSize: 14, fontWeight: '600' },
+    cardDivider: {
+      height: 1,
+      backgroundColor: theme.borderDefault,
+      marginVertical: 2,
+    },
+    signOutBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    signOutText: { color: theme.textMuted, fontSize: 14, fontWeight: '600' },
     skillHeaderButtons: {
       flexDirection: 'row',
       alignItems: 'center',

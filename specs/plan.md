@@ -85,6 +85,29 @@ Skill XP and class XP continue to be derived from the log subcollection at read 
 
 Firebase initializes without errors on web, Android emulator, and iOS simulator. Firestore rules reject unauthenticated reads.
 
+### Implementation Plan
+
+**Group 1 — Must be first**
+- Create the Firebase project in the Firebase console
+
+**Group 2 — Parallel (after project creation)**
+- Enable Firestore in production mode
+- Enable Firebase Auth with Email/Password and Google providers
+- Enable Firebase Cloud Messaging
+- Register iOS, Android, and Web apps in the Firebase console (generates config files)
+- Install npm packages: `@react-native-firebase/app`, `@react-native-firebase/auth`, `@react-native-firebase/firestore`, `@react-native-firebase/messaging`, `firebase`
+
+**Group 3 — Parallel (after Group 2)**
+- Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS) and add to project
+- Configure `app.json` with the Firebase config plugin and web Firebase config object
+- Add `public/firebase-messaging-sw.js` with the web Firebase config
+- Write `src/lib/firebase.ts` with platform-aware initialization (native SDK vs web SDK)
+- Write `firestore.rules`: only authenticated users can read/write their own `users/{userId}` documents
+
+**Group 4 — Final verification (sequential)**
+- Deploy Firestore rules and verify they reject unauthenticated reads
+- Smoke test: confirm Firebase initializes without errors on web, Android emulator, and iOS simulator
+
 ---
 
 ## Phase 2 — Authentication
@@ -122,6 +145,19 @@ Actions:
 ### Definition of Done
 
 User can create an account, sign in, sign out, and have their session persist across app restarts. Unauthenticated users cannot reach any data screen.
+
+### Implementation Plan
+
+**Group 1 — Foundation**
+- Create `src/store/authStore.ts` — Zustand store (not persisted) with `{ user: FirebaseUser | null, loading: boolean }` and actions: `signInWithEmail`, `signUpWithEmail`, `signInWithGoogle`, `signOut`
+
+**Group 2 — Parallel (after authStore exists)**
+- Create `app/auth.tsx` — auth screen with email/password and Google sign-in/sign-up flows; not part of the tab navigator
+- Wire up Google Sign-In: install and configure `@react-native-google-signin/google-signin`; add OAuth client IDs to `app.json`
+- Add sign-out button to `app/(tabs)/character.tsx` calling `authStore.signOut` (no dependency on Group 3)
+
+**Group 3 — Layout gating (after Group 2)**
+- Modify `app/_layout.tsx` — subscribe to `onAuthStateChanged` in a `useEffect`; hold splash screen while `loading === true`; render `app/auth.tsx` when `user === null`, tab navigator when `user !== null`
 
 ---
 
@@ -177,6 +213,24 @@ Currently the app waits for AsyncStorage hydration before rendering. Replace thi
 
 All data reads from and writes to Firestore. No AsyncStorage calls remain. App loads data correctly after a fresh install (sign-in restores all data from Firestore).
 
+### Implementation Plan
+
+**Group 1 — Foundation**
+- Create `src/lib/firestore.ts` with typed Firestore document and collection references for all data paths (character, quests, log, skills, shopItems, inventory)
+
+**Group 2 — Parallel store migrations (after Group 1)**
+- Migrate Character Store (`src/store/characterStore.ts`): remove `persist`, add `loadCharacterFromFirestore(userId)` hydration via `getDoc`, add write-through `setDoc(..., { merge: true })` after every action
+- Migrate Quest Store (`src/store/questStore.ts`): remove `persist`, add hydration via `getDocs` on quests + log subcollections and `getDoc` on skills document, add write-through per action, update `deleteQuest` to batch-delete sub-quest documents
+- Migrate Shop Store (`src/store/shopStore.ts`): remove `persist`, add hydration via `getDocs` on shopItems + inventory subcollections, add write-through per action
+
+**Group 3 — Hydration gate (after Group 2)**
+- Update `app/_layout.tsx`: remove AsyncStorage hydration wait, fire all three store hydration functions in parallel via `Promise.all` after auth resolves, hold splash screen until complete, write Firestore defaults on first sign-up
+
+**Group 4 — Cleanup (after Group 3 verified working)**
+- Remove all `zustand/middleware/persist` imports and wrappers from every store
+- Remove all `liferpg-*` AsyncStorage key constants and any remaining direct AsyncStorage calls
+- Uninstall `@react-native-async-storage/async-storage` after confirming no other dependency requires it
+
 ---
 
 ## Phase 4 — Cloud Functions Setup
@@ -195,6 +249,25 @@ All data reads from and writes to Firestore. No AsyncStorage calls remain. App l
 ### Definition of Done
 
 Functions deploy successfully. Cloud Tasks queue is created. The FCM utility can send a test message to a known token.
+
+### Implementation Plan
+
+**Group 1 — Foundation**
+- Initialize `functions/` directory using Firebase CLI (`firebase init functions`) with TypeScript
+
+**Group 2 — Parallel cloud infrastructure (after Group 1)**
+- Enable Cloud Tasks API in Google Cloud Console
+- Configure service account or Application Default Credentials for Cloud Tasks access from Cloud Functions
+
+**Group 3 — Queue creation (after Cloud Tasks API enabled)**
+- Create Cloud Tasks queue named `liferpg-notifications` in Google Cloud Console
+
+**Group 4 — Parallel utility functions (after Group 3 and credentials configured)**
+- Write `functions/src/fcm.ts` — sends an FCM message to an array of tokens given title, body, optional data payload
+- Write `functions/src/tasks.ts` — enqueues and deletes Cloud Tasks
+
+**Group 5 — Verification**
+- Deploy a health-check function and confirm it initializes without errors; verify FCM utility can send a test message to a known token
 
 ---
 
@@ -247,6 +320,24 @@ Add a "Notifications" section to the Character screen:
 
 On native and web: a resource threshold notification arrives when energy/hydration decays to the set level. A quest due date notification arrives at the configured time. Both work with the app closed.
 
+### Implementation Plan
+
+**Group 1 — Parallel foundation (types and store fields)**
+- Add `QuestNotification` union type (`time_of_day` and `before_due` variants) to `src/types/index.ts`; add `notification: QuestNotification | null` field to the `Quest` interface
+- Add `energyNotification`, `hydrationNotification`, and `timezone` fields to `Character` interface and `src/store/characterStore.ts`; add `setEnergyNotification`, `setHydrationNotification`, `setTimezone` actions; auto-detect timezone on sign-in via `Intl.DateTimeFormat().resolvedOptions().timeZone`
+
+**Group 2 — Parallel (all depend on Group 1, none depend on each other)**
+- Request notification permissions on device (native: `messaging().requestPermission()`, web: `Notification.requestPermission()`); build reusable permission-denied banner component
+- FCM token registration (client): call platform-appropriate `getToken()` after auth, upsert `users/{uid}/fcmTokens/{tokenHash}` with `platform`, `token`, `lastSeenAt`; register `onTokenRefresh` handler
+- Add notification picker UI to quest form (`app/modals/quest-form.tsx`): renders below due date/time when `dueDate` is set; "None", "At a specific time", "Before due time" options
+- Add notification settings section to Character screen: energy alert toggle + threshold input, hydration alert toggle + threshold input, permission-denied banner
+- Write `functions/src/notifications/resourceThreshold.ts` — `onDocumentWritten` on `users/{userId}/character`; replicates client decay math to compute `fireAt`; enqueues/replaces Cloud Tasks for energy and hydration alerts
+- Write `functions/src/notifications/questDue.ts` — `onDocumentWritten` on `users/{userId}/quests/{questId}`; computes `fireAt` from `QuestNotification` variant; enqueues/replaces/cancels Cloud Task
+- Write `functions/src/notifications/tokenCleanup.ts` — scheduled daily; batch-deletes `fcmTokens` documents where `lastSeenAt < 60 days ago`
+
+**Group 3 — Deploy (after Group 2)**
+- Deploy all three Cloud Functions; smoke-test FCM delivery on native and web; confirm scheduled `tokenCleanup` appears in Firebase console
+
 ---
 
 ## Phase 6 — Multi-Device Sync (Optional / Post-MVP)
@@ -268,6 +359,26 @@ The client that was last to write wins (Firestore last-write-wins per field with
 ### Definition of Done
 
 Completing a quest on a phone is visible on the web tab within a few seconds without a refresh.
+
+### Implementation Plan
+
+**Group 1 — Prerequisites verification**
+- Confirm Phase 3 Firestore write-through with `merge: true` is fully complete and stable
+- Confirm last-write-wins conflict strategy requires no additional resolution logic beyond `merge: true`
+
+**Group 2 — Parallel: mount all onSnapshot listeners (after Group 1)**
+- Mount `onSnapshot(characterRef)` in character store after hydration — merge incoming changes into local state
+- Mount `onSnapshot(questsCollection)` in quest store after hydration — diff incoming documents to add/update/remove local quests
+- Mount `onSnapshot(logCollection)` in quest store after hydration — append new log entries
+- Mount `onSnapshot(shopItemsCollection)` in shop store after hydration — diff incoming documents against local shop items
+- Mount `onSnapshot(inventoryCollection)` in shop store after hydration — diff incoming documents against local inventory
+
+**Group 3 — Listener lifecycle (after Group 2)**
+- Collect all five unsubscribe functions and wire them into the sign-out flow, ensuring every listener is torn down before the auth session ends
+
+**Group 4 — Integration verification**
+- End-to-end test: make a change on one device and confirm it propagates to a second device without a refresh, covering all five data domains
+- Confirm no memory leaks or permission errors occur after sign-out
 
 ---
 

@@ -91,6 +91,31 @@ See [navigation.md](./navigation.md) for the Skills page structure.
 
 ---
 
+## Notifications Settings
+
+The Character screen includes a "Notifications" section in the settings area. It contains:
+
+- **Permission warning banner**: Shown only when notification permission is `'denied'`. Prompts the player to enable notifications in system settings.
+- **Energy alert**: Toggle to enable/disable the energy threshold notification. When enabled, a number input sets the threshold (0–100). Greyed out if permission is denied.
+- **Hydration alert**: Toggle to enable/disable the hydration threshold notification. When enabled, a number input sets the threshold (0–120). Greyed out if permission is denied.
+
+The player's timezone is auto-detected from the device (`Intl.DateTimeFormat().resolvedOptions().timeZone`) and written to the character document on sign-in. It is not shown in the UI but is used server-side for scheduling `time_of_day` quest notifications.
+
+See [notifications.md](./notifications.md) for scheduling behavior.
+
+---
+
+## Account
+
+The Character screen includes a "Sign Out" button at the bottom of the settings area. Tapping it calls `authStore.signOut()`, which:
+
+1. Tears down all Firestore real-time listeners.
+2. Calls Firebase `auth.signOut()`.
+3. Clears local Zustand store state.
+4. Returns the user to the auth screen.
+
+---
+
 ## Color Scheme
 
 The player can toggle between dark mode and light mode from the Character screen. The setting is stored as `colorScheme` on the character profile (`'dark'` | `'light'`). It persists across app restarts.
@@ -101,9 +126,9 @@ The color scheme drives the theme context used by all components throughout the 
 
 ## Character Store
 
-### Persisted State
+### Firestore Document Shape
 
-All character state persists to AsyncStorage under the key `liferpg-profile`. The full persisted shape covers:
+All character state persists to Firestore at `users/{uid}/character`. The full document shape covers:
 
 - Player identity: `name`, `heroClass`
 - XP: `points`, `threshold`
@@ -111,6 +136,7 @@ All character state persists to AsyncStorage under the key `liferpg-profile`. Th
 - Energy: `energy`, `energyLastUpdated`, `energyDecayEnabled`, `energyMinutesPerDay`
 - Hydration: `hydration`, `hydrationLastUpdated`, `waterUnit`, `dailyWaterServings`
 - Classes: `customClasses` (array), `unlockedClasses` (array of class names)
+- Notifications: `energyNotification` (`{ enabled, threshold }`), `hydrationNotification` (`{ enabled, threshold }`), `timezone` (IANA string)
 - UI: `colorScheme`
 
 ### Key Actions
@@ -138,3 +164,6 @@ All character state persists to AsyncStorage under the key `liferpg-profile`. Th
 | `addCustomClass(input)` | Create a new custom class |
 | `updateCustomClass(id, partial)` | Edit a custom class |
 | `deleteCustomClass(id)` | Remove a custom class |
+| `setEnergyNotification({ enabled, threshold })` | Update energy alert config; triggers Cloud Function reschedule via Firestore write |
+| `setHydrationNotification({ enabled, threshold })` | Update hydration alert config; triggers Cloud Function reschedule via Firestore write |
+| `setTimezone(tz)` | Store the player's IANA timezone string |

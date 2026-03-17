@@ -48,6 +48,10 @@ export type RepeatSchedule =
   | { type: 'months'; every: number }
   | { type: 'weekdays'; days: number[] }; // 0=Sun … 6=Sat
 
+export type QuestNotification =
+  | { type: 'time_of_day'; hour: number; minute: number }     // fire at this time on dueDate
+  | { type: 'before_due'; minutesBefore: number };            // fire N minutes before dueTime
+
 export interface Quest {
   id: string;           // UUID v4
   name: string;
@@ -71,6 +75,7 @@ export interface Quest {
   dueDate: string | null;           // ISO date YYYY-MM-DD
   dueTime: string | null;           // optional time HH:MM
   dueDateSchedule: RepeatSchedule | null; // auto-advance due date on completion
+  notification: QuestNotification | null; // FCM notification config
   icon: string | null;
   iconColor: string | null;
   classQuest: string | null; // class name whose XP pool receives completion XP (null = equipped class)
@@ -91,6 +96,16 @@ export interface Character {
   energyDecayEnabled: boolean;  // if false, energy only changes via quest costs
   energyMinutesPerDay: number;  // total minutes for energy to drain from 100% to 0%
   colorScheme?: 'dark' | 'light';
+  energyNotification: { enabled: boolean; threshold: number };
+  hydrationNotification: { enabled: boolean; threshold: number };
+  timezone: string;
+}
+
+export interface FcmToken {
+  token: string;
+  platform: 'ios' | 'android' | 'web';
+  createdAt: number;    // timestamp
+  lastSeenAt: number;   // timestamp
 }
 
 export interface LogEntry {

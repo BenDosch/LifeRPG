@@ -103,20 +103,20 @@ A `notification` field is added to the Quest document in Firestore:
 
 ```typescript
 type QuestNotification =
-  | { type: 'time_of_day'; time: string }   // "HH:MM" — fires at this time on the due date
-  | { type: 'before_due'; minutes: number } // fires N minutes before dueDate + dueTime
+  | { type: 'time_of_day'; hour: number; minute: number }  // fires at this hour:minute on the due date
+  | { type: 'before_due'; minutesBefore: number }          // fires N minutes before dueDate + dueTime
 ```
 
-**`time_of_day`**: The notification fires at the specified time on the quest's `dueDate`. For example, `time: "09:00"` fires at 9:00 AM on the due date. Available whenever a `dueDate` is set.
+**`time_of_day`**: The notification fires at the specified `hour` and `minute` (24-hour) on the quest's `dueDate`, interpreted in the player's timezone. For example, `{ hour: 9, minute: 0 }` fires at 9:00 AM on the due date. Available whenever a `dueDate` is set.
 
-**`before_due`**: The notification fires a fixed number of minutes before the combined `dueDate` + `dueTime`. Only available when the quest has both a `dueDate` and a `dueTime`. Common presets: 15 min, 30 min, 1 hr (60), 2 hr (120), 1 day (1440), 2 days (2880). Custom minute values are also supported.
+**`before_due`**: The notification fires `minutesBefore` minutes before the combined `dueDate` + `dueTime`. Only available when the quest has both a `dueDate` and a `dueTime`. Common presets: 15, 30, 60, 120, 1440, 2880 minutes. Custom values are also supported.
 
 ### Quest Form UI
 
 When a `dueDate` is set on a quest, a "Reminder" row appears below the due date/time fields:
 - **None** (default)
-- **At a specific time** → shows a time picker (HH:MM); saves `{ type: 'time_of_day', time }`
-- **Before due time** → shows preset buttons + custom input; only enabled when `dueTime` is also set; saves `{ type: 'before_due', minutes }`
+- **At a specific time** → shows hour and minute steppers; saves `{ type: 'time_of_day', hour, minute }`
+- **Before due time** → shows preset chips + custom input; only enabled when `dueTime` is also set; saves `{ type: 'before_due', minutesBefore }`
 
 If the user removes the `dueDate`, the notification field is cleared and any pending notification is cancelled.
 
@@ -129,11 +129,13 @@ A Firestore `onWrite` Cloud Function triggers whenever a quest document changes.
 
 ```
 // time_of_day
-fireAt = Date(dueDate + ' ' + notification.time)  // local time for the user
+fireAt = fromZonedTime(dueDate at notification.hour:notification.minute, character.timezone)
 
 // before_due
-fireAt = Date(dueDate + 'T' + dueTime) - notification.minutes × 60 000 ms
+fireAt = fromZonedTime(dueDate + 'T' + dueTime, character.timezone) - notification.minutesBefore × 60 000 ms
 ```
+
+(`fromZonedTime` is from `date-fns-tz` — converts a local wall-clock time in the player's timezone to a UTC instant.)
 
 3. If `fireAt` is in the future, enqueues a Cloud Task that sends an FCM message to all user tokens at that time.
 

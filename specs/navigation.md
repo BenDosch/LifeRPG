@@ -9,7 +9,12 @@ LifeRPG uses Expo Router (file-based routing) with a stack navigator at the root
 The root layout wraps the entire app. It is responsible for:
 
 - Loading custom fonts (via `expo-font`)
-- Hiding the splash screen once fonts are ready
+- Subscribing to Firebase auth state via `onAuthStateChanged`; holding the splash screen while `loading === true`
+- Rendering `app/auth.tsx` when `user === null`; rendering the tab navigator when `user !== null`
+- After auth resolves, hydrating all three data stores from Firestore in parallel (`Promise.all`)
+- Hiding the splash screen once fonts, auth, and data hydration are all complete
+- Mounting real-time Firestore listeners (`onSnapshot`) after hydration
+- Registering the FCM token after auth and hydration resolve
 - Wrapping children in `SafeAreaProvider` and `GestureHandlerRootView`
 - Mounting decay watcher hooks: `useEnergyDecay` and `useHydrationDecay` (run continuously while app is open)
 - Rendering global event-driven modals: `QuestCompleteModal`, `LevelUpModal`, `ClassPickerModal`
@@ -21,10 +26,26 @@ The root layout wraps the entire app. It is responsible for:
 
 | Route | Type | Description |
 |---|---|---|
+| `auth` | Screen | Sign-in / sign-up screen; rendered only when unauthenticated |
 | `(tabs)` | Screen | The main tab navigator (nested) |
 | `modals/quest-form` | Modal | Quest create/edit form |
 | `modals/shop-item-form` | Modal | Shop item create/edit form |
 | `skills` | Screen (push) | Skills management full-screen page |
+
+---
+
+## Auth Screen (`app/auth.tsx`)
+
+Shown when the user is not signed in. Not part of the tab navigator — rendered directly by the root layout when `user === null`.
+
+Contains:
+- Email/password sign-in form
+- Toggle to switch to sign-up mode (creates a new account)
+- Google sign-in button
+- Error message display
+- Loading state during async sign-in
+
+On successful authentication, `onAuthStateChanged` fires in the root layout, `user` is set to non-null, and the app transitions to the tab navigator automatically. The auth screen does not need to navigate explicitly.
 
 ---
 
@@ -97,6 +118,8 @@ Single-scroll screen containing:
 - Hydration bar + settings
 - Button to navigate to Skills page
 - Color scheme toggle
+- **Notifications** section: energy alert toggle + threshold input, hydration alert toggle + threshold input, permission-denied banner
+- **Sign Out** button
 
 ---
 
@@ -138,6 +161,7 @@ The modal renders the `QuestForm` component, which covers:
 - Repeatable toggle + repeat schedule picker
 - Due date + time inputs
 - Due date auto-advance schedule picker
+- **Reminder** field: appears below due date/time when `dueDate` is set; options are "None", "At a specific time" (`time_of_day`), and "Before due time" (`before_due`). "Before due time" is disabled unless `dueTime` is also set.
 - Gold/energy/hydration reward and cost fields
 - Auto-complete on sub-quests toggle
 - Class quest assignment picker
